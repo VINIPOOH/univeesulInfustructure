@@ -1,4 +1,4 @@
-package infrastructure.controller;
+package infrastructure.http.controller;
 
 import infrastructure.anotation.Singleton;
 import org.apache.log4j.LogManager;

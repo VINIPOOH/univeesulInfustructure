@@ -1,8 +1,9 @@
 package infrastructure;
 
-import infrastructure.controller.MultipleMethodController;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.factory.ObjectFactory;
+import infrastructure.http.controller.MultipleMethodController;
+import infrastructure.tcp.controller.TcpController;
 import infrastructure.сonfig.Config;
 
 /**
@@ -20,7 +21,9 @@ public interface ApplicationContext {
 
     <T> T getObject(Class<T> typeKey);
 
-    MultipleMethodController getCommand(String linkKey);
+    MultipleMethodController getHttpCommand(String linkKey);
+
+    TcpController getTcpCommandController(String messageType);
 
     void setFactory(ObjectFactory factory);
 

@@ -1,4 +1,4 @@
-package infrastructure.controller;
+package infrastructure.http.controller;
 
 import javax.servlet.http.HttpServletRequest;
 

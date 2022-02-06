@@ -7,7 +7,10 @@ package infrastructure.constant;
 public interface AttributeConstants {
     String SESSION_LANG = "javax.servlet.jsp.jstl.fmt.locale.session";
     String REQUEST_LANG = "lang";
-    String SESSION_USER = "user";
+    String SESSION_USER_ID = "USER_ID";
+    String TCP_MESSAGE_TYPE_SPLITTER = "|";
+
     String LOGGED_USER_NAMES = "loggedUserNames";
     String CONTEXT = "context";
+
 }
