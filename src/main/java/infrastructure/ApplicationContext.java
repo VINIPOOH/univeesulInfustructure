@@ -3,7 +3,7 @@ package infrastructure;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.factory.ObjectFactory;
 import infrastructure.http.controller.MultipleMethodController;
-import infrastructure.tcp.controller.TcpController;
+import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.сonfig.Config;
 
 /**
@@ -19,11 +19,17 @@ public interface ApplicationContext {
 
     CurrencyInfo getCurrencyInfo(String langKey);
 
+    <T> void addObject(Class<T> typeKey, Object object);
+
     <T> T getObject(Class<T> typeKey);
 
     MultipleMethodController getHttpCommand(String linkKey);
 
     TcpController getTcpCommandController(String messageType);
+
+    Class getMessageTypeByCode(String messageCode);
+
+    String getMessageCodeByType(Object messageType);
 
     void setFactory(ObjectFactory factory);
 

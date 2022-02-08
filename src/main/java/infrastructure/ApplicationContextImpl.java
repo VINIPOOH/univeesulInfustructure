@@ -11,13 +11,14 @@ import infrastructure.factory.ObjectFactory;
 import infrastructure.factory.ObjectFactoryImpl;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.http.controller.PhantomController;
-import infrastructure.tcp.controller.TcpController;
+import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.сonfig.Config;
 import infrastructure.сonfig.JavaConfig;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,19 +37,30 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, MultipleMethodController> controllerMap;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
+    private final Map<String, Class> messageTypeToMessageClass;
+    private final Map<Class, String> massageTypeToCode;
     private final Class defaultEndpoint = PhantomController.class;
     private final Config config;
     private ObjectFactory factory;
 
-    public static ApplicationContext initializeContext() {
-        Map<Class, Object> paramMap = new ConcurrentHashMap<>();
-        paramMap.put(ResourceBundle.class, ResourceBundle.getBundle("db-request"));
-        ApplicationContext context = new ApplicationContextImpl(new JavaConfig(""), paramMap,
-                new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
-        ObjectFactory objectFactory = new ObjectFactoryImpl(context);
-        context.setFactory(objectFactory);
-        context.init();
-        return context;
+    private static ApplicationContext singleToneApplicationContext;
+
+    public static ApplicationContext getContext() {
+        if (singleToneApplicationContext==null){
+            synchronized (ApplicationContext.class){
+                if (singleToneApplicationContext==null){
+                    Map<Class, Object> paramMap = new ConcurrentHashMap<>();
+                    paramMap.put(ResourceBundle.class, ResourceBundle.getBundle("db-request"));
+                    ApplicationContext context = new ApplicationContextImpl(new JavaConfig(""), paramMap,
+                            new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new HashMap<>(), new HashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
+                    ObjectFactory objectFactory = new ObjectFactoryImpl(context);
+                    context.setFactory(objectFactory);
+                    context.init();
+                    singleToneApplicationContext = context;
+                }
+            }
+        }
+        return singleToneApplicationContext;
     }
 
     /**
@@ -57,11 +69,15 @@ public class ApplicationContextImpl implements ApplicationContext {
      * @param controllersPrepared                preload controllers map.
      * @param currencyInfoLoader                 used in constructor to load into {@link ApplicationContextImpl#currencies} exchange rates
      * @param messageTypeTcpCommandControllerMap
+     * @param messageTypeToMessageClass
+     * @param massageTypeToCode
      */
     public ApplicationContextImpl(Config config, Map<Class, Object> preparedCash,
                                   Map<String, MultipleMethodController> controllersPrepared,
-                                  CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap) {
+                                  CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageTypeToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
+        this.messageTypeToMessageClass = messageTypeToMessageClass;
+        this.massageTypeToCode = massageTypeToCode;
         log.debug("");
 
         this.controllerMap = controllersPrepared;
@@ -74,7 +90,7 @@ public class ApplicationContextImpl implements ApplicationContext {
      * used to preload not lazy singletons
      */
     public void init() {
-        objectsCash.put(this.getClass(), this);
+        objectsCash.put(ApplicationContext.class, this);
         log.debug("");
 
         for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
@@ -90,6 +106,17 @@ public class ApplicationContextImpl implements ApplicationContext {
         return currencies.get(langKey);
     }
 
+    @Override
+    public <T> void addObject(Class<T> typeKey, Object object){
+        if (!objectsCash.containsKey(typeKey)) {
+            synchronized (objectsCash){
+                if (!objectsCash.containsKey(typeKey)){
+                    objectsCash.put(typeKey, object);
+                }
+            }
+        }
+
+    }
 
     public <T> T getObject(Class<T> typeKey) {
         log.debug("");
@@ -153,14 +180,26 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
             for (Class<?> clazz : config.getTypesAnnotatedWith(TcpEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
                 TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
-                if (messageType.equals(annotation.value())) {
+                if (messageType.equals(annotation.requestMessageCode())) {
                     TcpController toReturn = (TcpController) getObject(clazz);
                     putToTcpCommandMapIfSingleton(messageType, clazz, toReturn);
+                    messageTypeToMessageClass.put(annotation.requestMessageCode(), annotation.requestMessageType());
+                    massageTypeToCode.put(annotation.responseMessageType(), annotation.responseMessageCode());
                     return toReturn;
                 }
             }
         }
         return (TcpController) getObject(defaultEndpoint);
+    }
+
+    @Override
+    public Class getMessageTypeByCode(String messageCode){
+        return messageTypeToMessageClass.get(messageCode);
+    }
+
+    @Override
+    public String getMessageCodeByType(Object messageType){
+        return massageTypeToCode.get(messageType);
     }
 
     public void setFactory(ObjectFactory factory) {

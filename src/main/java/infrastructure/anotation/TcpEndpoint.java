@@ -13,5 +13,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(ElementType.TYPE)
 @Retention(RUNTIME)
 public @interface TcpEndpoint {
-    String value();
+    String requestMessageCode();
+    Class requestMessageType();
+    String responseMessageCode();
+    Class responseMessageType();
 }

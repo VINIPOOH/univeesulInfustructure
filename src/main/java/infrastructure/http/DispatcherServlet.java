@@ -3,7 +3,6 @@ package infrastructure.http;
 import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
 import infrastructure.http.controller.MultipleMethodController;
-import infrastructure.tcp.connection.TcpServerHandler;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static infrastructure.constant.AttributeConstants.CONTEXT;
 import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
 
 
@@ -30,13 +28,13 @@ public class DispatcherServlet extends javax.servlet.http.HttpServlet {
     private static final Logger log = LogManager.getLogger(DispatcherServlet.class);
 
     @Override
-    public void init(){
+    public void init() {
+        log.debug("initialization started");
         final ServletContext servletContext = getServletContext();
         servletContext.setAttribute(LOGGED_USER_NAMES, new ConcurrentHashMap<String, HttpSession>());
-        final ApplicationContext context = ApplicationContextImpl.initializeContext();
-        servletContext.setAttribute(CONTEXT, context);
-        final TcpServerHandler tcpServerHandler = context.getObject(TcpServerHandler.class);
-        new Thread(tcpServerHandler).start();
+        final ApplicationContext context = ApplicationContextImpl.getContext();
+        log.debug("start tcp server");
+        log.debug("initialization done");
     }
 
     @Override
@@ -57,7 +55,7 @@ public class DispatcherServlet extends javax.servlet.http.HttpServlet {
     }
 
     private MultipleMethodController getMultipleMethodCommand(HttpServletRequest request) {
-        return ((ApplicationContext) getServletContext().getAttribute(CONTEXT))
+        return ApplicationContextImpl.getContext()
                 .getHttpCommand(request.getRequestURI().replaceFirst(".*/delivery/", ""));
     }
 

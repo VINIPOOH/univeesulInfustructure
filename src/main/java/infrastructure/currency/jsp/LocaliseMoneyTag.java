@@ -1,14 +1,13 @@
 package infrastructure.currency.jsp;
 
 import infrastructure.ApplicationContext;
+import infrastructure.ApplicationContextImpl;
 import infrastructure.currency.CurrencyInfo;
 
 import javax.servlet.ServletContext;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
 import java.io.IOException;
-
-import static infrastructure.constant.AttributeConstants.CONTEXT;
 
 /**
  * Jsp tag which localise money representation
@@ -43,7 +42,7 @@ public class LocaliseMoneyTag extends SimpleTagSupport {
     @Override
     public void doTag() throws IOException {
         ServletContext servletContext = ((PageContext) getJspContext()).getServletContext();
-        ApplicationContext context = ((ApplicationContext) servletContext.getAttribute(CONTEXT));
+        ApplicationContext context = ApplicationContextImpl.getContext();
         CurrencyInfo currencyInfo = context.getCurrencyInfo(lang);
         if (currencyInfo == null || moneyInCents * currencyInfo.getRatioToDollar() <= 0) {
             getJspContext().getOut().print(moneyInCents + ".00 $");
