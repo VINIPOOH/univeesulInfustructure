@@ -1,6 +1,7 @@
 package infrastructure;
 
 import infrastructure.anotation.HttpEndpoint;
+import infrastructure.anotation.NetworkDto;
 import infrastructure.anotation.Singleton;
 import infrastructure.anotation.TcpEndpoint;
 import infrastructure.currency.CurrencyInfo;
@@ -38,7 +39,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
     private final Map<String, Class> messageTypeToMessageClass;
-    private final Map<Class, String> massageTypeToCode;
+    private final Map<Class, String> massageClassToCode;
     private final Class defaultEndpoint = PhantomController.class;
     private final Config config;
     private ObjectFactory factory;
@@ -70,14 +71,14 @@ public class ApplicationContextImpl implements ApplicationContext {
      * @param currencyInfoLoader                 used in constructor to load into {@link ApplicationContextImpl#currencies} exchange rates
      * @param messageTypeTcpCommandControllerMap
      * @param messageTypeToMessageClass
-     * @param massageTypeToCode
+     * @param massageClassToCode
      */
-    public ApplicationContextImpl(Config config, Map<Class, Object> preparedCash,
+    private ApplicationContextImpl(Config config, Map<Class, Object> preparedCash,
                                   Map<String, MultipleMethodController> controllersPrepared,
-                                  CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageTypeToCode) {
+                                  CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
         this.messageTypeToMessageClass = messageTypeToMessageClass;
-        this.massageTypeToCode = massageTypeToCode;
+        this.massageClassToCode = massageClassToCode;
         log.debug("");
 
         this.controllerMap = controllersPrepared;
@@ -99,6 +100,12 @@ public class ApplicationContextImpl implements ApplicationContext {
                 log.debug("created" + clazz.getName());
                 getObject(clazz);
             }
+        }
+
+        for (Class<?> clazz : config.getTypesAnnotatedWith(NetworkDto.class)) {
+            NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
+            messageTypeToMessageClass.put(annotation.massageCode(), clazz);
+            massageClassToCode.put(clazz, annotation.massageCode());
         }
     }
 
@@ -170,21 +177,19 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     @Override
-    public TcpController getTcpCommandController(String messageType) {
-        if (messageTypeTcpCommandControllerMap.containsKey(messageType)) {
-            return messageTypeTcpCommandControllerMap.get(messageType);
+    public TcpController getTcpCommandController(String requestMessageType) {
+        if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
+            return messageTypeTcpCommandControllerMap.get(requestMessageType);
         }
         synchronized (messageTypeTcpCommandControllerMap) {
-            if (messageTypeTcpCommandControllerMap.containsKey(messageType)) {
-                return messageTypeTcpCommandControllerMap.get(messageType);
+            if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
+                return messageTypeTcpCommandControllerMap.get(requestMessageType);
             }
             for (Class<?> clazz : config.getTypesAnnotatedWith(TcpEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
                 TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
-                if (messageType.equals(annotation.requestMessageCode())) {
+                if (requestMessageType.equals(annotation.requestMessageCode())) {
                     TcpController toReturn = (TcpController) getObject(clazz);
-                    putToTcpCommandMapIfSingleton(messageType, clazz, toReturn);
-                    messageTypeToMessageClass.put(annotation.requestMessageCode(), annotation.requestMessageType());
-                    massageTypeToCode.put(annotation.responseMessageType(), annotation.responseMessageCode());
+                    putToTcpCommandMapIfSingleton(requestMessageType, clazz, toReturn);
                     return toReturn;
                 }
             }
@@ -199,7 +204,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     @Override
     public String getMessageCodeByType(Object messageType){
-        return massageTypeToCode.get(messageType);
+        return massageClassToCode.get(messageType);
     }
 
     public void setFactory(ObjectFactory factory) {

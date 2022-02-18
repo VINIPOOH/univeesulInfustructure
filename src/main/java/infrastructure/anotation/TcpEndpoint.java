@@ -14,7 +14,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface TcpEndpoint {
     String requestMessageCode();
-    Class requestMessageType();
-    String responseMessageCode();
-    Class responseMessageType();
 }

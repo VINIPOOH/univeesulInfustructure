@@ -9,4 +9,7 @@ import javax.websocket.Session;
 @AllArgsConstructor
 public class WebSocketSession {
     private Session session;
+    public int getUserId(){
+        return 0;
+    }
 }

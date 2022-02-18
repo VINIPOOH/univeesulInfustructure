@@ -4,10 +4,9 @@ import com.google.gson.Gson;
 import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
 import infrastructure.soket.ConnectionNotificationSubscriber;
-import infrastructure.soket.web_socket.dto.TcpControllerRequest;
-import infrastructure.soket.web_socket.dto.TcpControllerResponse;
-import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 import infrastructure.soket.web_socket.controller.TcpController;
+import infrastructure.soket.web_socket.dto.TcpControllerRequest;
+import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 import infrastructure.soket.web_socket.service.WebSocketSecurityService;
 import infrastructure.soket.web_socket.util.MassageDecoder;
 import infrastructure.soket.web_socket.util.MassageEncoder;
@@ -19,17 +18,19 @@ import java.io.IOException;
 import java.util.Map;
 
 @ServerEndpoint(value = "/game", decoders = MassageDecoder.class, encoders = MassageEncoder.class)
-public class WebSocketServer implements ConnectionNotificationSubscriber {
+public class WebSocketHandler implements ConnectionNotificationSubscriber {
+    public static final int HARDCODED_USER_ID = 12;
     //todo ivan find out how made thread wor here
 
     private WebSocketSecurityService tcpSecurityService;
     private ApplicationContext applicationContext;
     private Map<String, Session> sessionIdToSession;
     private TcpControllerNotificationService tcpControllerNotificationService;
+    private Session session;
 
-    public WebSocketServer() {
+    public WebSocketHandler() {
         applicationContext = ApplicationContextImpl.getContext();
-        applicationContext.addObject(WebSocketServer.class, this);
+        applicationContext.addObject(WebSocketHandler.class, this);
         tcpSecurityService = applicationContext.getObject(WebSocketSecurityService.class);
         tcpControllerNotificationService = applicationContext.getObject(TcpControllerNotificationService.class);
     }
@@ -38,8 +39,9 @@ public class WebSocketServer implements ConnectionNotificationSubscriber {
     @OnOpen
     public void onOpen(
             Session session) throws IOException {
+        this.session = session;
         tcpSecurityService.isUserAuthorizedToRequest(session.getId());
-        tcpControllerNotificationService.registerNewSession(session.getId(), new WebSocketSession(session)); // todo change session id on user id
+        tcpControllerNotificationService.registerNewSession(HARDCODED_USER_ID, this); // todo change session id on user id
     }
 
     @OnMessage
@@ -62,11 +64,11 @@ public class WebSocketServer implements ConnectionNotificationSubscriber {
 
     @SneakyThrows
     @Override
-    public void processMessage(TcpControllerRequest request, WebSocketSession session) {
+    public void processMessage(TcpControllerRequest request) {
         final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageType());
         final Object massage = convertJsonMassageToDto(request);
-        final Object response = tcpController.service(massage, session);
-        session.getSession().getBasicRemote().sendObject(response);
+        final Object response = tcpController.service(massage, new WebSocketSession(session));
+        session.getBasicRemote().sendObject(response);
     }
 
     @SneakyThrows

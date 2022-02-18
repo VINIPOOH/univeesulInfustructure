@@ -4,15 +4,13 @@ import infrastructure.ApplicationContext;
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.Singleton;
-import infrastructure.soket.web_socket.WebSocketServer;
+import infrastructure.soket.ConnectionNotificationSubscriber;
+import infrastructure.soket.web_socket.WebSocketHandler;
 import infrastructure.soket.web_socket.WebSocketSession;
 import infrastructure.soket.web_socket.dto.TcpControllerRequest;
 import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @NeedConfig
 @Singleton
@@ -21,27 +19,42 @@ public class TcpControllerNotificationServiceImpl implements TcpControllerNotifi
     @InjectByType
     private ApplicationContext applicationContext;
 
-    private final Map<String, List<String>> userIdToSubscribedUserIdsMap = new HashMap<>();
-    private final Map<String, WebSocketSession> userIdToConnectionHandlerMap = new HashMap<>();
+    private final Map<Integer, List<Integer>> userIdToSubscribedUserIdsMap = new HashMap<>();
+    private final Map<Integer, ConnectionNotificationSubscriber> userIdToConnectionHandlerMap = new HashMap<>();
+    private final Set<Integer> usersSubscribedOnFindGameAction = new HashSet<>();
 
     @Override
-    public void sendShearedState(TcpControllerRequest message, WebSocketSession session) {
-        final String user_id = session.getSession().getId();
-        userIdToSubscribedUserIdsMap.get(user_id)
-                .forEach(s -> applicationContext.getObject(WebSocketServer.class).processMessage(message, userIdToConnectionHandlerMap.get(s)));
+    public void sendShearedState(int senderId, TcpControllerRequest message) {
+        userIdToSubscribedUserIdsMap.get(senderId)
+                .forEach(s ->userIdToConnectionHandlerMap.get(senderId).processMessage(message));
     }
 
     @Override
-    public void registerNewSession(String userId, WebSocketSession session) {
-        userIdToConnectionHandlerMap.put(userId, session);
+    public void registerNewSession(int userId, ConnectionNotificationSubscriber subscriber) {
+        userIdToConnectionHandlerMap.put(userId, subscriber);
         userIdToSubscribedUserIdsMap.putIfAbsent(userId, new ArrayList<>());
     }
 
     @Override
-    public void subscribeOn(String userId, WebSocketSession session) {
-        userIdToSubscribedUserIdsMap.compute(session.getSession().getId(), (s, strings) -> {
-            strings.add(userId);
+    public void subscribeOnUser(int subscriberId, List<Integer> notifiersList) {
+        userIdToSubscribedUserIdsMap.compute(subscriberId, (s, strings) -> {
+            strings.addAll(notifiersList);
             return strings;
         });
+    }
+
+    @Override
+    public void subscribeOnGameFindAction(int subscriberId){
+        usersSubscribedOnFindGameAction.add(subscriberId);
+    }
+
+    @Override
+    public void notifyUsersAboutNewGame(List<Integer> usersIds, String massageCode){
+        TcpControllerRequest request = TcpControllerRequest.builder()
+                .messageType(massageCode).build();
+
+        usersIds.forEach(
+                (s ->userIdToConnectionHandlerMap.get(s).processMessage(request)));
+
     }
 }
