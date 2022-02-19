@@ -12,6 +12,8 @@ import java.util.Set;
 public interface Config {
     <T> Class<? extends T> getImplClass(Class<T> ifc);
 
+    <T> Set<Class<? extends T>> getImplClasses(Class<T> ifc);
+
     Set<Class<?>> getTypesAnnotatedWith(Class<? extends Annotation> annotation);
 
     <T> Set<Class<? extends T>> getSubTypesOf(Class<T> type);

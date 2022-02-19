@@ -30,6 +30,12 @@ public class JavaConfig implements Config {
     }
 
     @Override
+    public <T> Set<Class<? extends T>> getImplClasses(Class<T> ifc) {
+        Set<Class<? extends T>> classes = scanner.getSubTypesOf(ifc);
+        return classes;
+    }
+
+    @Override
     public Set<Class<?>> getTypesAnnotatedWith(Class<? extends Annotation> annotation) {
         return scanner.getTypesAnnotatedWith(annotation, false);
     }

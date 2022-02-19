@@ -1,9 +1,6 @@
 package infrastructure;
 
-import infrastructure.anotation.HttpEndpoint;
-import infrastructure.anotation.NetworkDto;
-import infrastructure.anotation.Singleton;
-import infrastructure.anotation.TcpEndpoint;
+import infrastructure.anotation.*;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.currency.CurrencyInfoFromFileLoader;
 import infrastructure.currency.CurrencyInfoLoader;
@@ -19,6 +16,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -107,6 +105,14 @@ public class ApplicationContextImpl implements ApplicationContext {
             messageTypeToMessageClass.put(annotation.massageCode(), clazz);
             massageClassToCode.put(clazz, annotation.massageCode());
         }
+
+        for (Class<?> clazz : config.getImplClasses(Runnable.class)){
+            if (Arrays.stream(clazz.getAnnotations()).anyMatch(annotation -> annotation instanceof DemonThread)){
+                final Runnable runnable = (Runnable) getObject(clazz);
+                new Thread(runnable).start();
+            }
+        }
+
     }
 
     public CurrencyInfo getCurrencyInfo(String langKey) {
