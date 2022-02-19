@@ -18,7 +18,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @ServerEndpoint(value = "/game", decoders = MassageDecoder.class, encoders = MassageEncoder.class)
-public class WebSocketHandler implements ConnectionNotificationSubscriber {
+public class ServerWebSocketHandler implements ConnectionNotificationSubscriber {
     public static final int HARDCODED_USER_ID = 12;
     //todo ivan find out how made thread wor here
 
@@ -28,9 +28,9 @@ public class WebSocketHandler implements ConnectionNotificationSubscriber {
     private TcpControllerNotificationService tcpControllerNotificationService;
     private Session session;
 
-    public WebSocketHandler() {
+    public ServerWebSocketHandler() {
         applicationContext = ApplicationContextImpl.getContext();
-        applicationContext.addObject(WebSocketHandler.class, this);
+        applicationContext.addObject(ServerWebSocketHandler.class, this);
         tcpSecurityService = applicationContext.getObject(WebSocketSecurityService.class);
         tcpControllerNotificationService = applicationContext.getObject(TcpControllerNotificationService.class);
     }

@@ -9,13 +9,21 @@ import infrastructure.factory.ObjectFactory;
 import infrastructure.factory.ObjectFactoryImpl;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.http.controller.PhantomController;
+import infrastructure.soket.web_socket.ClientWebSocketHandler;
+import infrastructure.soket.web_socket.TcpMessageSender;
 import infrastructure.soket.web_socket.controller.TcpController;
+import infrastructure.soket.web_socket.util.MassageEncoder;
 import infrastructure.сonfig.Config;
 import infrastructure.сonfig.JavaConfig;
+import lombok.SneakyThrows;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import javax.websocket.ContainerProvider;
+import javax.websocket.Session;
+import javax.websocket.WebSocketContainer;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,9 +53,9 @@ public class ApplicationContextImpl implements ApplicationContext {
     private static ApplicationContext singleToneApplicationContext;
 
     public static ApplicationContext getContext() {
-        if (singleToneApplicationContext==null){
-            synchronized (ApplicationContext.class){
-                if (singleToneApplicationContext==null){
+        if (singleToneApplicationContext == null) {
+            synchronized (ApplicationContext.class) {
+                if (singleToneApplicationContext == null) {
                     Map<Class, Object> paramMap = new ConcurrentHashMap<>();
                     paramMap.put(ResourceBundle.class, ResourceBundle.getBundle("db-request"));
                     ApplicationContext context = new ApplicationContextImpl(new JavaConfig(""), paramMap,
@@ -72,8 +80,8 @@ public class ApplicationContextImpl implements ApplicationContext {
      * @param massageClassToCode
      */
     private ApplicationContextImpl(Config config, Map<Class, Object> preparedCash,
-                                  Map<String, MultipleMethodController> controllersPrepared,
-                                  CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
+                                   Map<String, MultipleMethodController> controllersPrepared,
+                                   CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
         this.messageTypeToMessageClass = messageTypeToMessageClass;
         this.massageClassToCode = massageClassToCode;
@@ -106,8 +114,8 @@ public class ApplicationContextImpl implements ApplicationContext {
             massageClassToCode.put(clazz, annotation.massageCode());
         }
 
-        for (Class<?> clazz : config.getImplClasses(Runnable.class)){
-            if (Arrays.stream(clazz.getAnnotations()).anyMatch(annotation -> annotation instanceof DemonThread)){
+        for (Class<?> clazz : config.getImplClasses(Runnable.class)) {
+            if (Arrays.stream(clazz.getAnnotations()).anyMatch(annotation -> annotation instanceof DemonThread)) {
                 final Runnable runnable = (Runnable) getObject(clazz);
                 new Thread(runnable).start();
             }
@@ -115,15 +123,24 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     }
 
+    @Override
+    @SneakyThrows
+    public TcpMessageSender createClientWebSocketConnection(String serverPath){
+        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+        final Session session = container.connectToServer(ClientWebSocketHandler.class,
+                new URI("serverPath"));//ws://localhost:8080/balanser
+        return new TcpMessageSender(this, session, new MassageEncoder());
+    }
+
     public CurrencyInfo getCurrencyInfo(String langKey) {
         return currencies.get(langKey);
     }
 
     @Override
-    public <T> void addObject(Class<T> typeKey, Object object){
+    public <T> void addObject(Class<T> typeKey, Object object) {
         if (!objectsCash.containsKey(typeKey)) {
-            synchronized (objectsCash){
-                if (!objectsCash.containsKey(typeKey)){
+            synchronized (objectsCash) {
+                if (!objectsCash.containsKey(typeKey)) {
                     objectsCash.put(typeKey, object);
                 }
             }
@@ -204,12 +221,12 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     @Override
-    public Class getMessageTypeByCode(String messageCode){
+    public Class getMessageTypeByCode(String messageCode) {
         return messageTypeToMessageClass.get(messageCode);
     }
 
     @Override
-    public String getMessageCodeByType(Object messageType){
+    public String getMessageCodeByType(Object messageType) {
         return massageClassToCode.get(messageType);
     }
 

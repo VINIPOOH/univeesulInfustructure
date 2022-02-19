@@ -3,8 +3,10 @@ package infrastructure;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.factory.ObjectFactory;
 import infrastructure.http.controller.MultipleMethodController;
+import infrastructure.soket.web_socket.TcpMessageSender;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.сonfig.Config;
+import lombok.SneakyThrows;
 
 /**
  * Represents info about context in which application run.
@@ -16,6 +18,9 @@ import infrastructure.сonfig.Config;
  */
 public interface ApplicationContext {
     void init();
+
+    @SneakyThrows
+    TcpMessageSender createClientWebSocketConnection(String serverPath);
 
     CurrencyInfo getCurrencyInfo(String langKey);
 
