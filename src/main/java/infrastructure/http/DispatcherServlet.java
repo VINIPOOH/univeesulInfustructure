@@ -54,6 +54,22 @@ public class DispatcherServlet extends javax.servlet.http.HttpServlet {
         passOver(request, response, getMultipleMethodCommand(request).doPost(request));
     }
 
+    @Override
+    public void doPut(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        log.debug("servlet called with request - " + request.getRequestURI());
+
+        passOver(request, response, getMultipleMethodCommand(request).doPut(request));
+    }
+
+    @Override
+    public void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+        log.debug("servlet called with request - " + request.getRequestURI());
+
+        passOver(request, response, getMultipleMethodCommand(request).doDelete(request));
+    }
+
     private MultipleMethodController getMultipleMethodCommand(HttpServletRequest request) {
         return ApplicationContextImpl.getContext()
                 .getHttpCommand(request.getRequestURI().replaceFirst(".*/delivery/", ""));

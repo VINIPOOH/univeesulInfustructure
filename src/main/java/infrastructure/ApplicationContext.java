@@ -34,6 +34,11 @@ public interface ApplicationContext {
 
     Class getMessageTypeByCode(String messageCode);
 
+    /**
+     * retrieves message code by dto class
+     * @param messageType key for getting code
+     * @return kod of message
+     */
     String getMessageCodeByType(Object messageType);
 
     void setFactory(ObjectFactory factory);

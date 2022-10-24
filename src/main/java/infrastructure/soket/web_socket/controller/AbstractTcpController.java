@@ -2,8 +2,7 @@ package infrastructure.soket.web_socket.controller;
 
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
-import infrastructure.soket.web_socket.WebSocketSession;
-import infrastructure.soket.web_socket.dto.TcpControllerRequest;
+import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 
 import java.util.List;
@@ -14,7 +13,7 @@ public abstract class AbstractTcpController implements TcpController {
     @InjectByType
     private TcpControllerNotificationService tcpControllerNotificationService;
 
-    protected final void forwardStateChangeNotification(int userId, TcpControllerRequest message) {
+    protected final void forwardStateChangeNotification(int userId, SocketReceivedMessage message) {
         tcpControllerNotificationService.sendShearedState(userId, message);
     }
 

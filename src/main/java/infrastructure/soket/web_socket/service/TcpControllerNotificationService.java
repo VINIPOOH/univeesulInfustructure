@@ -1,13 +1,12 @@
 package infrastructure.soket.web_socket.service;
 
 import infrastructure.soket.ConnectionNotificationSubscriber;
-import infrastructure.soket.web_socket.WebSocketSession;
-import infrastructure.soket.web_socket.dto.TcpControllerRequest;
+import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 
 import java.util.List;
 
 public interface TcpControllerNotificationService {
-    void sendShearedState(int senderId, TcpControllerRequest message);
+    void sendShearedState(int senderId, SocketReceivedMessage message);
 
     void registerNewSession(int userId, ConnectionNotificationSubscriber subscriber);
 

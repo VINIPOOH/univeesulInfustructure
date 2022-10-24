@@ -16,4 +16,8 @@ public interface MultipleMethodController {
 
     String doPost(HttpServletRequest request);
 
+    String doPut(HttpServletRequest request);
+
+    String doDelete(HttpServletRequest request);
+
 }

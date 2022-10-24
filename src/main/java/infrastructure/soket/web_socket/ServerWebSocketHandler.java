@@ -5,7 +5,7 @@ import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
 import infrastructure.soket.ConnectionNotificationSubscriber;
 import infrastructure.soket.web_socket.controller.TcpController;
-import infrastructure.soket.web_socket.dto.TcpControllerRequest;
+import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 import infrastructure.soket.web_socket.service.WebSocketSecurityService;
 import infrastructure.soket.web_socket.util.MassageDecoder;
@@ -45,7 +45,7 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
     }
 
     @OnMessage
-    public Object onMessage(Session session, TcpControllerRequest request)
+    public Object onMessage(Session session, SocketReceivedMessage request)
             throws IOException {
 
         final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageType());
@@ -64,7 +64,7 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
 
     @SneakyThrows
     @Override
-    public void processMessage(TcpControllerRequest request) {
+    public void processMessage(SocketReceivedMessage request) {
         final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageType());
         final Object massage = convertJsonMassageToDto(request);
         final Object response = tcpController.service(massage, new WebSocketSession(session));
@@ -72,8 +72,8 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
     }
 
     @SneakyThrows
-    private Object convertJsonMassageToDto(TcpControllerRequest tcpControllerRequest) {       //todo ivan add proper naming to message from out side and dto
-        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(tcpControllerRequest.getMessageType());
-        return new Gson().fromJson(tcpControllerRequest.getJsonMessageData(), messageTypeByCode);
+    private Object convertJsonMassageToDto(SocketReceivedMessage socketReceivedMessage) {       //todo ivan add proper naming to message from out side and dto
+        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(socketReceivedMessage.getMessageType());
+        return new Gson().fromJson(socketReceivedMessage.getJsonMessageData(), messageTypeByCode);
     }
 }

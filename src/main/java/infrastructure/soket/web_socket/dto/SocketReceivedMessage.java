@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Builder
 @Data
-public class TcpControllerRequest {
+public class SocketReceivedMessage {
     private final String messageType;
     private final String jsonMessageData;
 }

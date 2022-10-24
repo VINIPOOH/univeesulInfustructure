@@ -5,10 +5,15 @@ import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.Singleton;
 import infrastructure.soket.ConnectionNotificationSubscriber;
-import infrastructure.soket.web_socket.dto.TcpControllerRequest;
+import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @NeedConfig
 @Singleton
@@ -22,9 +27,9 @@ public class TcpControllerNotificationServiceImpl implements TcpControllerNotifi
     private final Set<Integer> usersSubscribedOnFindGameAction = new HashSet<>();
 
     @Override
-    public void sendShearedState(int senderId, TcpControllerRequest message) {
+    public void sendShearedState(int senderId, SocketReceivedMessage message) {
         userIdToSubscribedUserIdsMap.get(senderId)
-                .forEach(s ->userIdToConnectionHandlerMap.get(senderId).processMessage(message));
+                .forEach(s -> userIdToConnectionHandlerMap.get(senderId).processMessage(message));
     }
 
     @Override
@@ -48,7 +53,7 @@ public class TcpControllerNotificationServiceImpl implements TcpControllerNotifi
 
     @Override
     public void notifyUsersAboutNewGame(List<Integer> usersIds, String massageCode){
-        TcpControllerRequest request = TcpControllerRequest.builder()
+        SocketReceivedMessage request = SocketReceivedMessage.builder()
                 .messageType(massageCode).build();
 
         usersIds.forEach(

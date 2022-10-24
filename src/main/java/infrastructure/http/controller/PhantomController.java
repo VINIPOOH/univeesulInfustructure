@@ -31,4 +31,14 @@ public class PhantomController implements MultipleMethodController {
     public String doPost(HttpServletRequest request) {
         return null;
     }
+
+    @Override
+    public String doPut(HttpServletRequest request) {
+        return null;
+    }
+
+    @Override
+    public String doDelete(HttpServletRequest request) {
+        return null;
+    }
 }

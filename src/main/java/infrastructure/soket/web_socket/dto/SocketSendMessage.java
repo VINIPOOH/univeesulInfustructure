@@ -5,7 +5,14 @@ import lombok.Data;
 
 @Builder
 @Data
-public class TcpControllerResponse {
+/**
+ * dto for send message to paired socket
+ */
+public class SocketSendMessage {
     private final String messageType;
+
+    /**
+     * Object will convert into string in
+     */
     private final Object response;
 }
