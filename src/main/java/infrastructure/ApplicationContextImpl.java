@@ -239,27 +239,31 @@ public class ApplicationContextImpl implements ApplicationContext {
                         .restUrlVariableInfos(restProcessorMethodsInfo.getRestUrlVariableInfos())
                         .build();
             }
-            for (Class<?> clazz : config.getTypesAnnotatedWith(RestEndpoint.class)) {
-                RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
-                for (String resourceFromAnnotation : annotation.resource()) {
-                    if (requestUrl.matches(resourceFromAnnotation)) {
-                        String[] urlSteps = resourceFromAnnotation.split("\\/");
-                        String pureEndingOfResource = urlSteps[urlSteps.length - 2];
-                        Object commandProcessor = getObject(clazz);
-                        if (clazz.isAnnotationPresent(Singleton.class)) {
-                            String restCommandPattern = resourceFromAnnotation.replaceAll("\\/", "\\/")//escape url slashes to make it regexes
-                                    .replaceAll("\\{\\w*\\}", "\\w*") //change to make match any.
-                                    + "\\/\\w*";//add end matcher
-                            cashRestSingeltonComandProcessor(clazz, restCommandPattern, pureEndingOfResource, commandProcessor);
-                        }
-                        return RestUrlCommandProcessorInfo.builder()
-                                .commandProcessor(commandProcessor)
-                                .restUrlVariableInfos(getRestUrlVariableInfos(urlSteps))
-                                .processorsMethod(
-                                        config.getMethodAnnotatedWith(
-                                                clazz, RestUrlUtilService.getRestMethodAnnotation(requestUrl, requestMethod, pureEndingOfResource))
-                                ).build();
+            return getNotCashedYetRestUrlCommandProcessorInfo(requestUrl, requestMethod);
+        }
+    }
+
+    private RestUrlCommandProcessorInfo getNotCashedYetRestUrlCommandProcessorInfo(String requestUrl, String requestMethod) {
+        for (Class<?> clazz : config.getTypesAnnotatedWith(RestEndpoint.class)) {
+            RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
+            for (String resourceFromAnnotation : annotation.resource()) {
+                if (requestUrl.matches(resourceFromAnnotation)) {
+                    String[] urlSteps = resourceFromAnnotation.split("\\/");
+                    String pureEndingOfResource = urlSteps[urlSteps.length - 2];
+                    Object commandProcessor = getObject(clazz);
+                    if (clazz.isAnnotationPresent(Singleton.class)) {
+                        String restCommandPattern = resourceFromAnnotation.replaceAll("\\/", "\\/")//escape url slashes to make it regexes
+                                .replaceAll("\\{\\w*\\}", "\\w*") //change to make match any.
+                                + "\\/\\w*";//add end matcher
+                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, pureEndingOfResource, commandProcessor);
                     }
+                    return RestUrlCommandProcessorInfo.builder()
+                            .commandProcessor(commandProcessor)
+                            .restUrlVariableInfos(getRestUrlVariableInfos(urlSteps))
+                            .processorsMethod(
+                                    config.getMethodAnnotatedWith(
+                                            clazz, RestUrlUtilService.getRestMethodAnnotation(requestUrl, requestMethod, pureEndingOfResource))
+                            ).build();
                 }
             }
         }
