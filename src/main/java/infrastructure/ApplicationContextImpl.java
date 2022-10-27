@@ -1,6 +1,16 @@
 package infrastructure;
 
-import infrastructure.anotation.*;
+import infrastructure.anotation.DemonThread;
+import infrastructure.anotation.HttpEndpoint;
+import infrastructure.anotation.NetworkDto;
+import infrastructure.anotation.Singleton;
+import infrastructure.anotation.TcpEndpoint;
+import infrastructure.anotation.rest.RestDelete;
+import infrastructure.anotation.rest.RestEndpoint;
+import infrastructure.anotation.rest.RestGetAll;
+import infrastructure.anotation.rest.RestGetById;
+import infrastructure.anotation.rest.RestPut;
+import infrastructure.anotation.rest.RestUpdate;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.currency.CurrencyInfoFromFileLoader;
 import infrastructure.currency.CurrencyInfoLoader;
@@ -16,19 +26,23 @@ import infrastructure.soket.web_socket.util.MassageEncoder;
 import infrastructure.сonfig.Config;
 import infrastructure.сonfig.JavaConfig;
 import lombok.SneakyThrows;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.websocket.ContainerProvider;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
-import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.ResourceBundle;
-import java.util.concurrent.ConcurrentHashMap;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * Represents info about context in which application run.
@@ -42,6 +56,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private static final Logger log = LogManager.getLogger(ApplicationContextImpl.class);
     private final Map<Class, Object> objectsCash;
     private final Map<String, MultipleMethodController> controllerMap;
+    private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
     private final Map<String, Class> messageTypeToMessageClass;
@@ -91,6 +106,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         this.config = config;
         this.objectsCash = preparedCash;
         currencies = currencyInfoLoader.getCurrencyInfo();
+        urlMatchPatternToCommandProcessorInfo = new HashMap<>();
     }
 
     /**
@@ -174,7 +190,6 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
 
-
     public MultipleMethodController getHttpCommand(String linkKey) {
         log.debug("");
 
@@ -185,7 +200,8 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (controllerMap.containsKey(linkKey)) {
                 return controllerMap.get(linkKey);
             }
-            for (Class<?> clazz : config.getTypesAnnotatedWith(HttpEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
+            for (Class<?> clazz : config.getTypesAnnotatedWith(
+                    HttpEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 for (String i : annotation.value()) {
                     if (i.equals(linkKey)) {
@@ -197,6 +213,122 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
         return (MultipleMethodController) getObject(defaultEndpoint);
+    }
+
+    @Override
+    public RestUrlCommandProcessorInfo getRestCommand(String linkKey, String requestMethod) {
+        log.debug("");
+
+        Optional<String> restKey = urlMatchPatternToCommandProcessorInfo.keySet().stream().filter(linkKey::matches).findFirst();
+        if (restKey.isPresent()) {
+            RestProcessorMethodsInfo restProcessorMethodsInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
+            RestUrlCommandProcessorInfo restUrlCommandProcessorInfo = new RestUrlCommandProcessorInfo();
+            restUrlCommandProcessorInfo.setRestUrlVariableInfos(restUrlCommandProcessorInfo.getRestUrlVariableInfos());
+            Class<? extends Annotation> methodIdentifyingAnnotation = null;
+            switch (requestMethod) {
+                case "GET":
+                    if (linkKey.endsWith(restProcessorMethodsInfo.getPureEndingOfResource())) {
+                        restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getGetAllMethod());
+                    } else {
+                        restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getGetByIdMethod());
+                    }
+                    break;
+                case "POST":
+                    restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getUpdateMethod());
+                    break;
+                case "PUT":
+                    restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getPutMethod());
+                    break;
+                case "DELETE":
+                    restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getDeleteMethod());
+                    break;
+            }
+            return restUrlCommandProcessorInfo;
+        }
+        synchronized (urlMatchPatternToCommandProcessorInfo) {
+            restKey = urlMatchPatternToCommandProcessorInfo.keySet().stream().filter(linkKey::matches).findFirst();
+            if (restKey.isPresent()) {
+                RestProcessorMethodsInfo restProcessorMethodsInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
+                RestUrlCommandProcessorInfo restUrlCommandProcessorInfo = new RestUrlCommandProcessorInfo();
+                restUrlCommandProcessorInfo.setRestUrlVariableInfos(restUrlCommandProcessorInfo.getRestUrlVariableInfos());
+                Class<? extends Annotation> methodIdentifyingAnnotation = null;
+                switch (requestMethod) {
+                    case "GET":
+                        if (linkKey.endsWith(restProcessorMethodsInfo.getPureEndingOfResource())) {
+                            restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getGetAllMethod());
+                        } else {
+                            restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getGetByIdMethod());
+                        }
+                        break;
+                    case "POST":
+                        restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getUpdateMethod());
+                        break;
+                    case "PUT":
+                        restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getPutMethod());
+                        break;
+                    case "DELETE":
+                        restUrlCommandProcessorInfo.setProcessorsMethod(restProcessorMethodsInfo.getDeleteMethod());
+                        break;
+                }
+                return restUrlCommandProcessorInfo;
+            }
+            for (Class<?> clazz : config.getTypesAnnotatedWith(
+                    RestEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
+                RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
+                for (String resourceUrlPattern : annotation.resource()) {
+                    if (linkKey.matches(resourceUrlPattern)) {
+                        //Create map of keys and places of their values in request
+                        List<RestUrlVariableInfo> afterSlashPlaceToKey = new ArrayList<>();
+                        String[] urlSteps = resourceUrlPattern.split("\\/");
+                        for (int j = 0; j < urlSteps.length; j++) {
+                            if (urlSteps[j].matches("\\{\\w*\\}")) {
+                                afterSlashPlaceToKey.add(new RestUrlVariableInfo(j, urlSteps[j].substring(1, urlSteps.length - 1)));
+                            }
+                        }
+                        resourceUrlPattern = resourceUrlPattern.replaceAll("\\/", "\\/")//escape url slashes to make it regexes
+                                .replaceAll("\\{\\w*\\}", "\\w*") //change to make match any.
+                                + "\\/\\w*";//add end matcher
+                        String pureEndingOfResource = urlSteps[urlSteps.length - 2];//todo pu it into vaslue map
+                        Class<? extends Annotation> restMethodAnnotation = null;
+                        switch (requestMethod) {
+                            case "GET":
+                                if (linkKey.endsWith(pureEndingOfResource)) {
+                                    restMethodAnnotation = RestGetAll.class;
+                                } else {
+                                    restMethodAnnotation = RestGetById.class;
+                                }
+                                break;
+                            case "POST":
+                                restMethodAnnotation = RestUpdate.class;
+                                break;
+                            case "PUT":
+                                restMethodAnnotation = RestPut.class;
+                                break;
+                            case "DELETE":
+                                restMethodAnnotation = RestDelete.class;
+                                break;
+                        }
+                        Object commandProcessor = getObject(clazz);
+                        RestUrlCommandProcessorInfo urlCommandProcessorInfo = new RestUrlCommandProcessorInfo(afterSlashPlaceToKey, commandProcessor,
+                                                                                                              config.getMethodAnnotatedWith(clazz,
+                                                                                                                                            restMethodAnnotation));
+                        if (clazz.isAnnotationPresent(Singleton.class)) {
+                            RestProcessorMethodsInfo restUrlCommandProcessorInfo = new RestProcessorMethodsInfo();
+                            restUrlCommandProcessorInfo.setCommandProcessor(commandProcessor);
+                            restUrlCommandProcessorInfo.setPureEndingOfResource(pureEndingOfResource);
+                            restUrlCommandProcessorInfo.setGetByIdMethod(config.getMethodAnnotatedWith(clazz, RestGetById.class));
+                            restUrlCommandProcessorInfo.setGetAllMethod(config.getMethodAnnotatedWith(clazz, RestGetAll.class));
+                            restUrlCommandProcessorInfo.setUpdateMethod(config.getMethodAnnotatedWith(clazz, RestUpdate.class));
+                            restUrlCommandProcessorInfo.setPutMethod(config.getMethodAnnotatedWith(clazz, RestPut.class));
+                            restUrlCommandProcessorInfo.setDeleteMethod(config.getMethodAnnotatedWith(clazz, RestDelete.class));
+                            urlMatchPatternToCommandProcessorInfo.put(resourceUrlPattern, restUrlCommandProcessorInfo);
+                        }
+                        return urlCommandProcessorInfo;
+                    }
+                }
+            }
+        }
+        return null;//(MultipleMethodController) getObject(defaultEndpoint); todo сделать дефолтный обработчки 404 на случай если не нашелся подходящий мапинг
     }
 
     @Override

@@ -1,10 +1,13 @@
 package infrastructure.сonfig;
 
 import infrastructure.exception.ConfigurationException;
-import org.reflections.Reflections;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import org.reflections.Reflections;
 
 /**
  * Represent application configuration info from java code
@@ -43,6 +46,30 @@ public class JavaConfig implements Config {
     @Override
     public <T> Set<Class<? extends T>> getSubTypesOf(Class<T> type) {
         return scanner.getSubTypesOf(type);
+    }
+
+    @Override
+    public List<Method> getMethodsAnnotatedWith(final Class<?> type, final Class<? extends Annotation> annotation) {
+        final List<Method> methods = new ArrayList<Method>();
+        Class<?> klass = type;
+        while (klass != Object.class) { // need to traverse a type hierarchy in order to process methods from super types
+            // iterate though the list of methods declared in the class represented by klass variable, and add those annotated with the specified annotation
+            for (final Method method : klass.getDeclaredMethods()) {
+                if (method.isAnnotationPresent(annotation)) {
+                    Annotation annotInstance = method.getAnnotation(annotation);
+                    // TODO process annotInstance
+                    methods.add(method);
+                }
+            }
+            // move to the upper class in the hierarchy in search for more methods
+            klass = klass.getSuperclass();
+        }
+        return methods;
+    }
+
+    @Override
+    public Method getMethodAnnotatedWith(Class<?> type, Class<? extends Annotation> annotation) {
+        return getMethodsAnnotatedWith(type, annotation).get(0);
     }
 }
 

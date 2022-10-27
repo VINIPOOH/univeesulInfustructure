@@ -30,12 +30,15 @@ public interface ApplicationContext {
 
     MultipleMethodController getHttpCommand(String linkKey);
 
+    RestUrlCommandProcessorInfo getRestCommand(String linkKey, String requestMethod);
+
     TcpController getTcpCommandController(String messageType);
 
     Class getMessageTypeByCode(String messageCode);
 
     /**
      * retrieves message code by dto class
+     *
      * @param messageType key for getting code
      * @return kod of message
      */

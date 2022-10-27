@@ -2,68 +2,115 @@ package infrastructure.http;
 
 import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
+import infrastructure.RestUrlCommandProcessorInfo;
 import infrastructure.http.controller.MultipleMethodController;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import infrastructure.util.RestUrlUtilService;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.servlet.GenericServlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.concurrent.ConcurrentHashMap;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
-
 
 /**
  * @author Vendelovskyi Ivan
  * @version 1.0
  */
-public class DispatcherServlet extends javax.servlet.http.HttpServlet {
+public class DispatcherServlet extends GenericServlet {
 
     public static final String JSON_RESPONSE = "json-response:";
     private static final Logger log = LogManager.getLogger(DispatcherServlet.class);
+
+    ApplicationContext context;
 
     @Override
     public void init() {
         log.debug("initialization started");
         final ServletContext servletContext = getServletContext();
         servletContext.setAttribute(LOGGED_USER_NAMES, new ConcurrentHashMap<String, HttpSession>());
-        final ApplicationContext context = ApplicationContextImpl.getContext();
+        context = ApplicationContextImpl.getContext();
         log.debug("start tcp server");
         log.debug("initialization done");
     }
 
     @Override
-    public void doGet(HttpServletRequest request,
-                      HttpServletResponse response)
+    public void service(ServletRequest servletRequest, ServletResponse servletResponse) throws ServletException, IOException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
+        String logicUrlPath = request.getRequestURI().replaceFirst(".*/delivery/", "");
+        if (logicUrlPath.startsWith("rest/")) {//todo етот иф можно заменить патерном команда в будйщем если потребуется
+            processRestRequest(logicUrlPath, request, response);
+        } else {
+            processGeneralHttpRequest((HttpServletResponse) servletResponse, request);
+        }
+    }
+
+    private void processGeneralHttpRequest(HttpServletResponse servletResponse, HttpServletRequest request) throws IOException, ServletException {
+        switch (request.getMethod()) {
+            case "GET":
+                doGet(request, servletResponse);
+                break;
+            case "POST":
+                doPost(request, servletResponse);
+                break;
+            case "PUT":
+                doPut(request, servletResponse);
+                break;
+            case "DELETE":
+                doDelete(request, servletResponse);
+                break;
+        }
+    }
+
+    private void processRestRequest(String logicUrlPath, HttpServletRequest request,
+                                    HttpServletResponse response) {
+        logicUrlPath = logicUrlPath.replaceFirst("rest/", "");
+        RestUrlCommandProcessorInfo restCommandProcessorInfo = ApplicationContextImpl.getContext().getRestCommand(logicUrlPath, request.getMethod());
+
+        Object[] parametersToPassInInvocation = RestUrlUtilService.retrieveParametersFromRestUrl(logicUrlPath, restCommandProcessorInfo);
+        //todo тут если потребуется подходящее место для добавления автопередачи реквеста и респонса дальше в методы
+
+        try {
+            restCommandProcessorInfo.getProcessorsMethod().invoke(restCommandProcessorInfo.getCommandProcessor(), parametersToPassInInvocation);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void doGet(HttpServletRequest request,
+                       HttpServletResponse response)
             throws IOException, ServletException {
         log.debug("servlet called with request - " + request.getRequestURI());
 
         passOver(request, response, getMultipleMethodCommand(request).doGet(request));
     }
 
-    @Override
-    public void doPost(HttpServletRequest request, HttpServletResponse response)
+    private void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         log.debug("servlet called with request - " + request.getRequestURI());
 
         passOver(request, response, getMultipleMethodCommand(request).doPost(request));
     }
 
-    @Override
-    public void doPut(HttpServletRequest request, HttpServletResponse response)
+    private void doPut(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         log.debug("servlet called with request - " + request.getRequestURI());
 
         passOver(request, response, getMultipleMethodCommand(request).doPut(request));
     }
 
-    @Override
-    public void doDelete(HttpServletRequest request, HttpServletResponse response)
+    private void doDelete(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         log.debug("servlet called with request - " + request.getRequestURI());
 

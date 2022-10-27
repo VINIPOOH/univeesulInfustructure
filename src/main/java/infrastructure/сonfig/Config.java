@@ -1,6 +1,8 @@
 package infrastructure.сonfig;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -18,4 +20,7 @@ public interface Config {
 
     <T> Set<Class<? extends T>> getSubTypesOf(Class<T> type);
 
+    List<Method> getMethodsAnnotatedWith(Class<?> type, Class<? extends Annotation> annotation);
+
+    Method getMethodAnnotatedWith(Class<?> type, Class<? extends Annotation> annotation);
 }
