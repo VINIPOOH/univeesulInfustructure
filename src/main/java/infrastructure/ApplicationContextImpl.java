@@ -253,8 +253,8 @@ public class ApplicationContextImpl implements ApplicationContext {
                     Object commandProcessor = getObject(clazz);
                     if (clazz.isAnnotationPresent(Singleton.class)) {
                         String restCommandPattern = resourceFromAnnotation.replaceAll("\\/", "\\/")//escape url slashes to make it regexes
-                                .replaceAll("\\{\\w*\\}", "\\w*") //change to make match any.
-                                + "\\/\\w*";//add end matcher
+                                .replaceAll("\\{\\w*\\}", "\\w*"); //change to make match any.
+                        //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
                         cashRestSingeltonComandProcessor(clazz, restCommandPattern, pureEndingOfResource, commandProcessor);
                     }
                     return RestUrlCommandProcessorInfo.builder()
