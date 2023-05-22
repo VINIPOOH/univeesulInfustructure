@@ -64,6 +64,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Class defaultEndpoint = PhantomController.class;
     private final Config config;
     private ObjectFactory factory;
+    private final ResourceBundle applicationConfigurationBundle = ResourceBundle.getBundle("application");
 
     private static ApplicationContext singleToneApplicationContext;
 
@@ -72,7 +73,6 @@ public class ApplicationContextImpl implements ApplicationContext {
             synchronized (ApplicationContext.class) {
                 if (singleToneApplicationContext == null) {
                     Map<Class, Object> paramMap = new ConcurrentHashMap<>();
-                    paramMap.put(ResourceBundle.class, ResourceBundle.getBundle("db-request"));
                     ApplicationContext context = new ApplicationContextImpl(new JavaConfig(""), paramMap,
                             new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new HashMap<>(), new HashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
                     ObjectFactory objectFactory = new ObjectFactoryImpl(context);
@@ -325,6 +325,11 @@ public class ApplicationContextImpl implements ApplicationContext {
     @Override
     public String getMessageCodeByType(Object messageType) {
         return massageClassToCode.get(messageType);
+    }
+
+    @Override
+    public ResourceBundle getApplicationConfigurationBundle() {
+        return applicationConfigurationBundle;
     }
 
     public void setFactory(ObjectFactory factory) {

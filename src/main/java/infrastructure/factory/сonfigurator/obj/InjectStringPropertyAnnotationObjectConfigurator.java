@@ -18,21 +18,14 @@ import java.util.ResourceBundle;
 public class InjectStringPropertyAnnotationObjectConfigurator implements ObjectConfigurator {
     private static final Logger log = LogManager.getLogger(InjectStringPropertyAnnotationObjectConfigurator.class);
 
-    private final ResourceBundle resourceBundle;
-
-
-    public InjectStringPropertyAnnotationObjectConfigurator() {
-        log.debug("");
-
-        resourceBundle = ResourceBundle.getBundle("application");
-    }
-
     @Override
     public void configure(Object instance, Class instanceType, ApplicationContext context) {
         for (Field field : instanceType.getDeclaredFields()) {
             InjectStringProperty annotation = field.getAnnotation(InjectStringProperty.class);
             if (annotation != null) {
-                String value = annotation.value().isEmpty() ? resourceBundle.getString(field.getName()) : resourceBundle.getString(annotation.value());
+                String value = annotation.value().isEmpty() ?
+                        context.getApplicationConfigurationBundle().getString(field.getName()) :
+                        context.getApplicationConfigurationBundle().getString(annotation.value());
                 field.setAccessible(true);
                 try {
                     field.set(instance, value);

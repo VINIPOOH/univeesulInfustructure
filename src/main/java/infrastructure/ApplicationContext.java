@@ -8,6 +8,8 @@ import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.сonfig.Config;
 import lombok.SneakyThrows;
 
+import java.util.ResourceBundle;
+
 /**
  * Represents info about context in which application run.
  * Contains info about currency rates.
@@ -17,6 +19,8 @@ import lombok.SneakyThrows;
  * @version 1.0
  */
 public interface ApplicationContext {
+    ResourceBundle getApplicationConfigurationBundle();
+
     void init();
 
     @SneakyThrows
