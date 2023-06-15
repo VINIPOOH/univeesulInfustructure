@@ -7,12 +7,12 @@ import lombok.SneakyThrows;
 import javax.websocket.Session;
 
 
-public class TcpMessageSender {
+public class WebSocketMessageSender {
     private final ApplicationContext applicationContext;
     private final Session session;
     private final MassageEncoder massageEncoder;
 
-    public TcpMessageSender(ApplicationContext applicationContext, Session session, MassageEncoder massageEncoder) {
+    public WebSocketMessageSender(ApplicationContext applicationContext, Session session, MassageEncoder massageEncoder) {
         this.applicationContext = applicationContext;
         this.session = session;
         this.massageEncoder = massageEncoder;

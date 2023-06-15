@@ -122,7 +122,7 @@ public class DispatcherServlet extends GenericServlet {
 
     private MultipleMethodController getMultipleMethodCommand(HttpServletRequest request) {
         return ApplicationContextImpl.getContext()
-                .getHttpCommand(request.getRequestURI().replaceFirst(".*/delivery/", ""));
+                .getHttpCommand(request.getRequestURI().replaceFirst(".*/delivery/", ""));//todo generify this delivery in some property
     }
 
     private void passOver(HttpServletRequest request, HttpServletResponse response, String page) throws IOException, ServletException {

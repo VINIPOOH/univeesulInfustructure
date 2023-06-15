@@ -13,4 +13,8 @@ public class ReflectionException extends RuntimeException {
 
     public ReflectionException() {
     }
+
+    public ReflectionException(Throwable cause) {
+        super(cause);
+    }
 }

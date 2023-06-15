@@ -1,6 +1,5 @@
 package infrastructure.config;
 
-import infrastructure.сonfig.JavaConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;

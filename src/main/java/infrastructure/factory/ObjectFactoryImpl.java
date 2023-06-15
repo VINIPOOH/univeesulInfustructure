@@ -4,8 +4,8 @@ import infrastructure.ApplicationContext;
 import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.PostConstruct;
 import infrastructure.exception.ReflectionException;
-import infrastructure.factory.сonfigurator.obj.ObjectConfigurator;
-import infrastructure.factory.сonfigurator.proxy.ProxyConfigurator;
+import infrastructure.factory.configurator.obj.ObjectConfigurator;
+import infrastructure.factory.configurator.proxy.ProxyConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 

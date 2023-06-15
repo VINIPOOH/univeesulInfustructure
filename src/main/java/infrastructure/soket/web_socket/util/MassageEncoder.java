@@ -16,9 +16,9 @@ public class MassageEncoder implements Encoder.Text<Object> {
     }
 
     @Override
-    public String encode(Object tcpControllerResponse) {
-        return ApplicationContextImpl.getContext().getMessageCodeByType(tcpControllerResponse.getClass()) + TCP_MESSAGE_TYPE_SPLITTER_REGEX
-                + convertObjectToJson(tcpControllerResponse);
+    public String encode(Object message) {
+        return ApplicationContextImpl.getContext().getMessageCodeByType(message.getClass()) + TCP_MESSAGE_TYPE_SPLITTER_REGEX
+                + convertObjectToJson(message);
     }
 
     @Override

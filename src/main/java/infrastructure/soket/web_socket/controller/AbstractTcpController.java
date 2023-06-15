@@ -17,7 +17,7 @@ public abstract class AbstractTcpController implements TcpController {
         tcpControllerNotificationService.sendShearedState(userId, message);
     }
 
-    protected final void subscribeToUser(int userId, List<Integer> notifiersList) {
-        tcpControllerNotificationService.subscribeOnUser(userId, notifiersList);
+    protected final void subscribeToUser(int userId, List<Integer> notifiersUsersIdsList) {
+        tcpControllerNotificationService.subscribeOnUser(userId, notifiersUsersIdsList);
     }
 }

@@ -1,4 +1,4 @@
-package infrastructure.сonfig;
+package infrastructure.config;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

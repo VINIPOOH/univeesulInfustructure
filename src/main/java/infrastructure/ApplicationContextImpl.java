@@ -19,17 +19,12 @@ import infrastructure.factory.ObjectFactory;
 import infrastructure.factory.ObjectFactoryImpl;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.http.controller.PhantomController;
-import infrastructure.soket.web_socket.ClientWebSocketHandler;
-import infrastructure.soket.web_socket.TcpMessageSender;
 import infrastructure.soket.web_socket.controller.TcpController;
-import infrastructure.soket.web_socket.util.MassageEncoder;
 import infrastructure.util.RestUrlUtilService;
-import infrastructure.сonfig.Config;
-import infrastructure.сonfig.JavaConfig;
-import lombok.SneakyThrows;
+import infrastructure.config.Config;
+import infrastructure.config.JavaConfig;
 
 import java.lang.reflect.InvocationTargetException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,9 +33,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.websocket.ContainerProvider;
-import javax.websocket.Session;
-import javax.websocket.WebSocketContainer;
+
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -139,14 +132,14 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     }
 
-    @Override
-    @SneakyThrows
-    public TcpMessageSender createClientWebSocketConnection(String serverPath){
-        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-        final Session session = container.connectToServer(ClientWebSocketHandler.class,
-                new URI("serverPath"));//ws://localhost:8080/balanser
-        return new TcpMessageSender(this, session, new MassageEncoder());
-    }
+//    @Override
+//    @SneakyThrows
+//    public WebSocketMessageSender createClientWebSocketConnection(String serverPath){
+//        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+//        final Session session = container.connectToServer(ClientWebSocketHandler.class,
+//                new URI("serverPath"));//ws://localhost:8080/balanser
+//        return new WebSocketMessageSender(this, session, new MassageEncoder());
+//    }
 
     public CurrencyInfo getCurrencyInfo(String langKey) {
         return currencies.get(langKey);
@@ -183,7 +176,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             try {
                 toReturn = factory.createObject(implClass);
             } catch (InvocationTargetException | NoSuchMethodException | InstantiationException | IllegalAccessException e) {
-                throw new ReflectionException();
+                throw new ReflectionException(e);
             }
             putToObjectsCashIfSingleton(typeKey, implClass, toReturn);
             return toReturn;

@@ -12,6 +12,7 @@ import lombok.SneakyThrows;
 
 import javax.websocket.*;
 import java.io.IOException;
+import java.net.URI;
 
 @ClientEndpoint(decoders = MassageDecoder.class, encoders = MassageEncoder.class)
 public class ClientWebSocketHandler {
@@ -23,12 +24,17 @@ public class ClientWebSocketHandler {
     private ApplicationContext applicationContext;
     private Session session;
 
-    public ClientWebSocketHandler() {
+    public ClientWebSocketHandler(URI endpointURI) {
         applicationContext = ApplicationContextImpl.getContext();
         applicationContext.addObject(ServerWebSocketHandler.class, this);
         tcpSecurityService = applicationContext.getObject(WebSocketSecurityService.class);
+        try {
+            WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+            container.connectToServer(this, endpointURI);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
-
 
     @OnOpen
     public void onOpen(
@@ -56,8 +62,8 @@ public class ClientWebSocketHandler {
 
 
     @SneakyThrows
-    private Object convertJsonMassageToDto(SocketReceivedMessage socketReceivedMessage) {       //todo ivan add proper naming to message from out side and dto
-        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(socketReceivedMessage.getMessageType());
-        return new Gson().fromJson(socketReceivedMessage.getJsonMessageData(), messageTypeByCode);
+    private Object convertJsonMassageToDto(SocketReceivedMessage receivedMessage) {       //todo ivan add proper naming to message from out side and dto
+        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(receivedMessage.getMessageType());
+        return new Gson().fromJson(receivedMessage.getJsonMessageData(), messageTypeByCode);
     }
 }

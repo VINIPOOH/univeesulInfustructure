@@ -1,4 +1,4 @@
-package infrastructure.factory.сonfigurator.obj;
+package infrastructure.factory.configurator.obj;
 
 import infrastructure.ApplicationContext;
 import infrastructure.anotation.InjectStringProperty;
@@ -7,7 +7,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Field;
-import java.util.ResourceBundle;
 
 /**
  * Inject in configurable string properties marked annotation {@link InjectStringProperty}

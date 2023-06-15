@@ -1,4 +1,4 @@
-package infrastructure.сonfig;
+package infrastructure.config;
 
 import infrastructure.exception.ConfigurationException;
 

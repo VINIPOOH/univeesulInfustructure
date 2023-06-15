@@ -3,10 +3,8 @@ package infrastructure;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.factory.ObjectFactory;
 import infrastructure.http.controller.MultipleMethodController;
-import infrastructure.soket.web_socket.TcpMessageSender;
 import infrastructure.soket.web_socket.controller.TcpController;
-import infrastructure.сonfig.Config;
-import lombok.SneakyThrows;
+import infrastructure.config.Config;
 
 import java.util.ResourceBundle;
 
@@ -23,8 +21,8 @@ public interface ApplicationContext {
 
     void init();
 
-    @SneakyThrows
-    TcpMessageSender createClientWebSocketConnection(String serverPath);
+//    @SneakyThrows
+//    WebSocketMessageSender createClientWebSocketConnection(String serverPath);
 
     CurrencyInfo getCurrencyInfo(String langKey);
 

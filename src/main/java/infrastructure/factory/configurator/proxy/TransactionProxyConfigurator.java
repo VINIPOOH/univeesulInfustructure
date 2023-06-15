@@ -1,4 +1,4 @@
-package infrastructure.factory.сonfigurator.proxy;
+package infrastructure.factory.configurator.proxy;
 
 import infrastructure.ApplicationContext;
 import infrastructure.anotation.Transaction;

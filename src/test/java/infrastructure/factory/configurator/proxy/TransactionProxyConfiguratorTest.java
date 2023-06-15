@@ -1,4 +1,4 @@
-package infrastructure.factory.сonfigurator.proxy;
+package infrastructure.factory.configurator.proxy;
 
 import infrastructure.dal.conection.pool.TransactionalManager;
 import infrastructure.ApplicationContext;
