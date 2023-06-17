@@ -1,6 +1,7 @@
 package infrastructure.dal.conection.dao;
 
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * Declare method for mapping an entity class into {@link PreparedStatement}
@@ -10,5 +11,5 @@ import java.sql.PreparedStatement;
  */
 @FunctionalInterface
 public interface EntityToPreparedStatementMapper<E> {
-    void map(E entity, PreparedStatement preparedStatement);
+    void map(E entity, PreparedStatement preparedStatement) throws SQLException;
 }

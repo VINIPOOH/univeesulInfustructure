@@ -6,6 +6,8 @@ import infrastructure.anotation.Singleton;
 import testingFunctional.crud.dao.UserDao;
 import testingFunctional.crud.model.UserModel;
 
+import static com.sun.org.apache.xml.internal.utils.LocaleUtility.EMPTY_STRING;
+
 @Singleton
 @NeedConfig
 public class UserServiceImpl implements UserService {
@@ -16,5 +18,32 @@ public class UserServiceImpl implements UserService {
     public String getUserById(int parameter) {
         UserModel userModel = userDao.getUserById(parameter).get();
         return userModel.toString();
+    }
+
+    @Override
+    public String createUser(int userId) {
+        if (userDao.createUser(new UserModel(userId))) {
+            return getUserById(userId);
+        }
+        return EMPTY_STRING;
+    }
+
+    @Override
+    public String updateUserName(int userId, String userName) {
+        if (userDao.updateUser(new UserModel(userId, userName))) {
+            return getUserById(userId);
+        }
+        return EMPTY_STRING;
+    }
+
+    @Override
+    public String deleteUserById(int userId) {
+        userDao.deleteUser(new UserModel(userId));
+        return EMPTY_STRING;
+    }
+
+    @Override
+    public String getAllUsers() {
+        return userDao.getAllUsers().stream().map(UserModel::toString).reduce((s, s2) -> s+","+s2).get();
     }
 }

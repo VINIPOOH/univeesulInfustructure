@@ -9,7 +9,7 @@
 <html>
 <head>
     <title>User info</title>
-    ${requestScope.userId}
+    ${requestScope.user_id}
 </head>
 <body>
 

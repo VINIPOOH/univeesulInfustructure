@@ -37,6 +37,13 @@ public class DispatcherServlet extends GenericServlet {
 
     @Override
     public void init() {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("MySQL JDBC Driver loaded successfully");
+        } catch (ClassNotFoundException e) {
+            System.out.println("Failed to load MySQL JDBC Driver");
+            e.printStackTrace();
+        }
         log.debug("initialization started");
         final ServletContext servletContext = getServletContext();
         servletContext.setAttribute(LOGGED_USER_NAMES, new ConcurrentHashMap<String, HttpSession>());
@@ -127,7 +134,7 @@ public class DispatcherServlet extends GenericServlet {
 
     private void passOver(HttpServletRequest request, HttpServletResponse response, String page) throws IOException, ServletException {
         if (page.contains("redirect:")) {
-            response.sendRedirect(page.replace("redirect:", "/delivery/")); //
+            response.sendRedirect(page.replace("redirect:", "")); //
         } else if (page.startsWith(JSON_RESPONSE)) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

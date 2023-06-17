@@ -10,7 +10,6 @@ import java.util.Optional;
  * @version 1.0
  */
 public interface AbstractGenericDao<E> {
-    String RUSSIAN_LANG_COD = "ru";
 
     List<E> findAllByLongParam(long param, String query, ResultSetToEntityMapper<E> mapper);
 
@@ -20,11 +19,11 @@ public interface AbstractGenericDao<E> {
 
     long countAllByLongParam(long param, String query);
 
-    boolean save(E entity, String saveQuery, EntityToPreparedStatementMapper<E> mapper);
+    boolean create(E entity, String saveQuery, EntityToPreparedStatementMapper<E> mapper);
 
     Optional<E> findById(long id, String query, ResultSetToEntityMapper<E> mapper);
 
-    boolean deleteById(long id, String query, ResultSetToEntityMapper<E> mapper);
+    boolean delete(E entity, String query, EntityToPreparedStatementMapper<E> mapper);
 
     List<E> findAll(String query, ResultSetToEntityMapper<E> mapper);
 

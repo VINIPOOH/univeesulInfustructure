@@ -26,6 +26,8 @@ public abstract class JDBCAbstractGenericDao<E> implements AbstractGenericDao<E>
     @InjectByType
     protected TransactionalManager connector;
 
+    public JDBCAbstractGenericDao() {
+    }
 
     @Override
     public List<E> findAllByLongParam(long param, String query, ResultSetToEntityMapper<E> mapper) {
@@ -87,12 +89,25 @@ public abstract class JDBCAbstractGenericDao<E> implements AbstractGenericDao<E>
 
 
     @Override
-    public boolean save(E entity, String saveQuery, EntityToPreparedStatementMapper<E> mapper) {
+    public boolean create(E entity, String saveQuery, EntityToPreparedStatementMapper<E> mapper) {
         try (ConnectionProxy connection = connector.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(saveQuery)) {
 
             mapper.map(entity, preparedStatement);
             return preparedStatement.executeUpdate() != 0;
+        } catch (SQLException e) {
+            throw new DBRuntimeException(e);
+        }
+    }
+
+
+    @Override
+    public boolean update(E entity, String saveQuery, EntityToPreparedStatementMapper<E> mapper) {
+        try (ConnectionProxy connection = connector.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(saveQuery)) {
+
+            mapper.map(entity, preparedStatement);
+            return preparedStatement.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new DBRuntimeException();
         }
@@ -108,16 +123,16 @@ public abstract class JDBCAbstractGenericDao<E> implements AbstractGenericDao<E>
                 return resultSet.next() ? Optional.of(mapper.map(resultSet)) : Optional.empty();
             }
         } catch (SQLException e) {
-            throw new DBRuntimeException();
+            throw new DBRuntimeException(e);
         }
     }
 
     @Override
-    public boolean deleteById(long id, String query, ResultSetToEntityMapper<E> mapper) {
+    public boolean delete(E entity, String query, EntityToPreparedStatementMapper<E> mapper) {
         try (ConnectionProxy connection = connector.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setLong(1, id);
+            mapper.map(entity, preparedStatement);
             return preparedStatement.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new DBRuntimeException();
@@ -142,16 +157,5 @@ public abstract class JDBCAbstractGenericDao<E> implements AbstractGenericDao<E>
         }
     }
 
-    @Override
-    public boolean update(E entity, String saveQuery, EntityToPreparedStatementMapper<E> mapper) {
-        try (ConnectionProxy connection = connector.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(saveQuery)) {
-
-            mapper.map(entity, preparedStatement);
-            return preparedStatement.executeUpdate() == 1;
-        } catch (SQLException e) {
-            throw new DBRuntimeException();
-        }
-    }
 
 }
