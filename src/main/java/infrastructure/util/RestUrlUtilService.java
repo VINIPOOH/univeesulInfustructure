@@ -23,7 +23,6 @@ public class RestUrlUtilService {
     public static Object[] retrieveParametersFromRestUrl(String logicUrlPath, RestUrlCommandProcessorInfo restCommandProcessorInfo,
                                                          HttpServletRequest request, HttpServletResponse response) {
         //todo refactor this method. It brakes single responsibility and abstraction principles. It should not retrieve parameters fom url and in the seme time retrieve body
-        //todo in future allso will be neded to add awutowiring reuvest end response and this will also appere here .
         String[] urlSteps = logicUrlPath.split("\\/");
         urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
         Parameter[] parametersReflection = restCommandProcessorInfo.getProcessorsMethod().getParameters();
@@ -44,23 +43,30 @@ public class RestUrlUtilService {
             List<RestUrlVariableInfo> restUrlVariableInfos = restCommandProcessorInfo.getRestUrlVariableInfos();
             for (int j = 0; j < restUrlVariableInfos.size(); j++) {
                 if (restUrlVariableInfos.get(j).getKey().equals(parameter.getAnnotation(RequestParam.class).paramName())) {
-                    String stingValueToSet = urlSteps[restUrlVariableInfos.get(j).getNumberStepInUrl()];
+                    String valueOfVariable = urlSteps[restUrlVariableInfos.get(j).getNumberStepInUrl()];
                     Class<?> parameterType = parametersReflection[i].getType();
-                    if (parameterType.equals(int.class) || parameterType.equals(Integer.class)) {
-                        parametersToReturn[i] = Integer.parseInt(stingValueToSet);
-                    } else if (parameterType.equals(long.class) || parameterType.equals(Long.class)) {
-                        parametersToReturn[i] = Long.parseLong(stingValueToSet);
-                    } else if (parameterType.equals(float.class) || parameterType.equals(Float.class)) {
-                        parametersToReturn[i] = Float.parseFloat(stingValueToSet);
-                    } else if (parameterType.equals(double.class) || parameterType.equals(Double.class)) {
-                        parametersToReturn[i] = Double.parseDouble(stingValueToSet);
-                    } else {
-                        parametersToReturn[i] = stingValueToSet;
-                    }
+                    Object valueToSet = getValueToSet(valueOfVariable, parameterType);
+                    parametersToReturn[i] = valueToSet;
                 }
             }
         }
         return parametersToReturn;
+    }
+
+    private static Object getValueToSet(String valueOfVariable, Class<?> parameterType) {
+        Object valueToSet;
+        if (parameterType.equals(int.class) || parameterType.equals(Integer.class)) {
+            valueToSet = Integer.parseInt(valueOfVariable);
+        } else if (parameterType.equals(long.class) || parameterType.equals(Long.class)) {
+            valueToSet = Long.parseLong(valueOfVariable);
+        } else if (parameterType.equals(float.class) || parameterType.equals(Float.class)) {
+            valueToSet = Float.parseFloat(valueOfVariable);
+        } else if (parameterType.equals(double.class) || parameterType.equals(Double.class)) {
+            valueToSet = Double.parseDouble(valueOfVariable);
+        } else {
+            valueToSet = valueOfVariable;
+        }
+        return valueToSet;
     }
 
     public static Method retrieveMethodForProcessRequest(String requestUrl, String requestMethod, RestProcessorMethodsInfo restProcessorMethodsInfo) {
