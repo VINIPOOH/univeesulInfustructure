@@ -6,8 +6,6 @@ import infrastructure.anotation.Singleton;
 import testingFunctional.crud.dao.UserDao;
 import testingFunctional.crud.model.UserModel;
 
-import static com.sun.org.apache.xml.internal.utils.LocaleUtility.EMPTY_STRING;
-
 @Singleton
 @NeedConfig
 public class UserServiceImpl implements UserService {
@@ -25,7 +23,7 @@ public class UserServiceImpl implements UserService {
         if (userDao.createUser(new UserModel(userId))) {
             return getUserById(userId);
         }
-        return EMPTY_STRING;
+        return "";
     }
 
     @Override
@@ -33,13 +31,13 @@ public class UserServiceImpl implements UserService {
         if (userDao.updateUser(new UserModel(userId, userName))) {
             return getUserById(userId);
         }
-        return EMPTY_STRING;
+        return "";
     }
 
     @Override
     public String deleteUserById(int userId) {
         userDao.deleteUser(new UserModel(userId));
-        return EMPTY_STRING;
+        return "";
     }
 
     @Override

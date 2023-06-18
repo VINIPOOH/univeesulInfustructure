@@ -240,22 +240,23 @@ public class ApplicationContextImpl implements ApplicationContext {
         for (Class<?> clazz : config.getTypesAnnotatedWith(RestEndpoint.class)) {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
             for (String resourceFromAnnotation : annotation.resource()) {
-                if (requestUrl.matches(resourceFromAnnotation)) {
-                    String[] urlSteps = resourceFromAnnotation.split("\\/");
-                    String pureEndingOfResource = urlSteps[urlSteps.length - 2];
+                String[] urlSteps = resourceFromAnnotation.split("\\/");
+                urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
+                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/");
+                String restCommandPattern = resourceFromAnnotation.replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/")
+                        .replaceAll("\\/\\{[^/]*\\}", "/?([^/])*");//change to make match any.
+                //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
+                if (requestUrl.matches(restCommandPattern)) {
                     Object commandProcessor = getObject(clazz);
-                    if (clazz.isAnnotationPresent(Singleton.class)) {
-                        String restCommandPattern = resourceFromAnnotation.replaceAll("\\/", "\\/")//escape url slashes to make it regexes
-                                .replaceAll("\\{\\w*\\}", "\\w*"); //change to make match any.
-                        //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
-                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, pureEndingOfResource, commandProcessor);
+                    if (clazz.isAnnotationPresent(Singleton.class)) {//по хорошему нужно создать кеш в не зависимости от синглтонства. Потому что каждый раз для
+                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor);
                     }
                     return RestUrlCommandProcessorInfo.builder()
                             .commandProcessor(commandProcessor)
                             .restUrlVariableInfos(getRestUrlVariableInfos(urlSteps))
                             .processorsMethod(
                                     config.getMethodAnnotatedWith(
-                                            clazz, RestUrlUtilService.getRestMethodAnnotation(requestUrl, requestMethod, pureEndingOfResource))
+                                            clazz, RestUrlUtilService.getRestMethodAnnotation(requestUrl, requestMethod, resourceWithoutLustIdParameterRegex))
                             ).build();
                 }
             }
@@ -263,11 +264,20 @@ public class ApplicationContextImpl implements ApplicationContext {
         return null;//(MultipleMethodController) getObject(defaultEndpoint); todo сделать дефолтный обработчки 404 на случай если не нашелся подходящий мапинг
     }
 
+    private String removeLustIdParameter(String resourceFromAnnotation) {
+        String resourceWithoutLustIdParameter = resourceFromAnnotation;//отбрасываем последний парметр в урле
+        int lastIndex = resourceWithoutLustIdParameter.lastIndexOf("/");
+        if (lastIndex != -1) {
+            resourceWithoutLustIdParameter = resourceFromAnnotation.substring(0, lastIndex);
+        }
+        return resourceWithoutLustIdParameter;
+    }
+
     private List<RestUrlVariableInfo> getRestUrlVariableInfos(String[] urlSteps) {
         List<RestUrlVariableInfo> restUrlVariableInfos = new ArrayList<>();
         for (int j = 0; j < urlSteps.length; j++) {
-            if (urlSteps[j].matches("\\{\\w*\\}")) {
-                restUrlVariableInfos.add(new RestUrlVariableInfo(j, urlSteps[j].substring(1, urlSteps.length - 1)));
+            if (urlSteps[j].matches("\\{[^/]*\\}")) {
+                restUrlVariableInfos.add(new RestUrlVariableInfo(j, urlSteps[j].substring(1, urlSteps[j].length() - 1)));
             }
         }
         return restUrlVariableInfos;

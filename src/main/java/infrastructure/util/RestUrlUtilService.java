@@ -3,12 +3,7 @@ package infrastructure.util;
 import infrastructure.RestProcessorMethodsInfo;
 import infrastructure.RestUrlCommandProcessorInfo;
 import infrastructure.RestUrlVariableInfo;
-import infrastructure.anotation.rest.RequestBody;
-import infrastructure.anotation.rest.RestDelete;
-import infrastructure.anotation.rest.RestGetAll;
-import infrastructure.anotation.rest.RestGetById;
-import infrastructure.anotation.rest.RestPut;
-import infrastructure.anotation.rest.RestUpdate;
+import infrastructure.anotation.rest.*;
 import lombok.SneakyThrows;
 
 import java.lang.annotation.Annotation;
@@ -19,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import com.google.gson.Gson;
 
 public class RestUrlUtilService {
@@ -29,6 +25,7 @@ public class RestUrlUtilService {
         //todo refactor this method. It brakes single responsibility and abstraction principles. It should not retrieve parameters fom url and in the seme time retrieve body
         //todo in future allso will be neded to add awutowiring reuvest end response and this will also appere here .
         String[] urlSteps = logicUrlPath.split("\\/");
+        urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
         Parameter[] parametersReflection = restCommandProcessorInfo.getProcessorsMethod().getParameters();
         Object[] parametersToReturn = new Object[parametersReflection.length];
         for (int i = 0; i < parametersReflection.length; i++) {
@@ -46,8 +43,20 @@ public class RestUrlUtilService {
             }
             List<RestUrlVariableInfo> restUrlVariableInfos = restCommandProcessorInfo.getRestUrlVariableInfos();
             for (int j = 0; j < restUrlVariableInfos.size(); j++) {
-                if (restUrlVariableInfos.get(j).getKey().equals(parameter.getName())) {
-                    parametersToReturn[i] = urlSteps[restUrlVariableInfos.get(j).getNumberStepInUrl()];
+                if (restUrlVariableInfos.get(j).getKey().equals(parameter.getAnnotation(RequestParam.class).paramName())) {
+                    String stingValueToSet = urlSteps[restUrlVariableInfos.get(j).getNumberStepInUrl()];
+                    Class<?> parameterType = parametersReflection[i].getType();
+                    if (parameterType.equals(int.class) || parameterType.equals(Integer.class)) {
+                        parametersToReturn[i] = Integer.parseInt(stingValueToSet);
+                    } else if (parameterType.equals(long.class) || parameterType.equals(Long.class)) {
+                        parametersToReturn[i] = Long.parseLong(stingValueToSet);
+                    } else if (parameterType.equals(float.class) || parameterType.equals(Float.class)) {
+                        parametersToReturn[i] = Float.parseFloat(stingValueToSet);
+                    } else if (parameterType.equals(double.class) || parameterType.equals(Double.class)) {
+                        parametersToReturn[i] = Double.parseDouble(stingValueToSet);
+                    } else {
+                        parametersToReturn[i] = stingValueToSet;
+                    }
                 }
             }
         }
@@ -57,7 +66,7 @@ public class RestUrlUtilService {
     public static Method retrieveMethodForProcessRequest(String requestUrl, String requestMethod, RestProcessorMethodsInfo restProcessorMethodsInfo) {
         switch (requestMethod) {
             case "GET":
-                if (requestUrl.endsWith(restProcessorMethodsInfo.getPureEndingOfResource())) {
+                if (requestUrl.matches(restProcessorMethodsInfo.getPureEndingOfResource())) {
                     return restProcessorMethodsInfo.getGetAllMethod();
                 } else {
                     return restProcessorMethodsInfo.getGetByIdMethod();
@@ -74,9 +83,12 @@ public class RestUrlUtilService {
 
     public static Class<? extends Annotation> getRestMethodAnnotation(String linkKey, String requestMethod, String pureEndingOfResource) {
         Class<? extends Annotation> restMethodAnnotation = null;
+        if (linkKey.lastIndexOf("/") == linkKey.length() - 1) {
+            linkKey = linkKey.substring(0, linkKey.length() - 1);
+        }
         switch (requestMethod) {
             case "GET":
-                if (linkKey.endsWith(pureEndingOfResource)) {
+                if (linkKey.matches(pureEndingOfResource)) {
                     restMethodAnnotation = RestGetAll.class;
                 } else {
                     restMethodAnnotation = RestGetById.class;

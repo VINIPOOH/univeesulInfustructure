@@ -57,7 +57,7 @@ public class DispatcherServlet extends GenericServlet {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String logicUrlPath = request.getRequestURI().replaceFirst(".*/delivery/", "");
-        if (logicUrlPath.startsWith("rest/")) {//todo етот иф можно заменить патерном команда в будйщем если потребуется
+        if (logicUrlPath.startsWith("/rest/")) {//todo етот иф можно заменить патерном команда в будйщем если потребуется
             passOver(request, response, processRestRequest(logicUrlPath, request, response));
         } else {
             processGeneralHttpRequest((HttpServletResponse) servletResponse, request);
@@ -83,7 +83,7 @@ public class DispatcherServlet extends GenericServlet {
 
     private String processRestRequest(String logicUrlPath, HttpServletRequest request,
                                       HttpServletResponse response) {
-        logicUrlPath = logicUrlPath.replaceFirst("rest/", "");
+        logicUrlPath = logicUrlPath.replaceFirst("/rest", "");
         RestUrlCommandProcessorInfo restCommandProcessorInfo = ApplicationContextImpl.getContext().getRestCommand(logicUrlPath, request.getMethod());
 
         Object[] parametersToPassInInvocation = RestUrlUtilService.retrieveParametersFromRestUrl(logicUrlPath, restCommandProcessorInfo, request, response);
