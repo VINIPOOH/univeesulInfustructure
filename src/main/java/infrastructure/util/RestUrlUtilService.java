@@ -70,6 +70,10 @@ public class RestUrlUtilService {
     }
 
     public static Method retrieveMethodForProcessRequest(String requestUrl, String requestMethod, RestProcessorMethodsInfo restProcessorMethodsInfo) {
+        Class<? extends Annotation> restMethodAnnotation = null;
+        if (requestUrl.lastIndexOf("/") == requestUrl.length() - 1) {
+            requestUrl = requestUrl.substring(0, requestUrl.length() - 1);
+        }
         switch (requestMethod) {
             case "GET":
                 if (requestUrl.matches(restProcessorMethodsInfo.getPureEndingOfResource())) {

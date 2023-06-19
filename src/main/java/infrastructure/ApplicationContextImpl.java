@@ -249,7 +249,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 if (requestUrl.matches(restCommandPattern)) {
                     Object commandProcessor = getObject(clazz);
                     if (clazz.isAnnotationPresent(Singleton.class)) {//по хорошему нужно создать кеш в не зависимости от синглтонства. Потому что каждый раз для
-                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor);
+                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor, urlSteps);
                     }
                     return RestUrlCommandProcessorInfo.builder()
                             .commandProcessor(commandProcessor)
@@ -283,7 +283,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         return restUrlVariableInfos;
     }
 
-    private void cashRestSingeltonComandProcessor(Class<?> clazz, String resourceUrlPattern, String pureEndingOfResource, Object commandProcessor) {
+    private void cashRestSingeltonComandProcessor(Class<?> clazz, String resourceUrlPattern, String pureEndingOfResource, Object commandProcessor, String[] urlSteps) {
         RestProcessorMethodsInfo restUrlCommandProcessorInfo = new RestProcessorMethodsInfo();
         restUrlCommandProcessorInfo.setCommandProcessor(commandProcessor);
         restUrlCommandProcessorInfo.setPureEndingOfResource(pureEndingOfResource);
@@ -292,6 +292,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         restUrlCommandProcessorInfo.setUpdateMethod(config.getMethodAnnotatedWith(clazz, RestUpdate.class));
         restUrlCommandProcessorInfo.setPutMethod(config.getMethodAnnotatedWith(clazz, RestPut.class));
         restUrlCommandProcessorInfo.setDeleteMethod(config.getMethodAnnotatedWith(clazz, RestDelete.class));
+        restUrlCommandProcessorInfo.setRestUrlVariableInfos(getRestUrlVariableInfos(urlSteps));
         urlMatchPatternToCommandProcessorInfo.put(resourceUrlPattern, restUrlCommandProcessorInfo);
     }
 
