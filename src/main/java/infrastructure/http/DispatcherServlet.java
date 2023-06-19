@@ -32,6 +32,7 @@ public class DispatcherServlet extends GenericServlet {
 
     public static final String JSON_RESPONSE = "json-response:";
     private static final Logger log = LogManager.getLogger(DispatcherServlet.class);
+    private static final RestUrlUtilService REST_URL_UTIL_SERVICE = new RestUrlUtilService();
 
     ApplicationContext context;
 
@@ -86,8 +87,7 @@ public class DispatcherServlet extends GenericServlet {
         logicUrlPath = logicUrlPath.replaceFirst("/rest", "");
         RestUrlCommandProcessorInfo restCommandProcessorInfo = ApplicationContextImpl.getContext().getRestCommand(logicUrlPath, request.getMethod());
 
-        Object[] parametersToPassInInvocation = RestUrlUtilService.retrieveParametersFromRestUrl(logicUrlPath, restCommandProcessorInfo, request, response);
-        //todo тут если потребуется подходящее место для добавления автопередачи реквеста и респонса дальше в методы
+        Object[] parametersToPassInInvocation = populateMethodParametersValues(logicUrlPath, request, response, restCommandProcessorInfo);
 
         try {
             Object invoke = restCommandProcessorInfo.getProcessorsMethod().invoke(restCommandProcessorInfo.getCommandProcessor(), parametersToPassInInvocation);
@@ -96,6 +96,15 @@ public class DispatcherServlet extends GenericServlet {
             e.printStackTrace();
             return "null";
         }
+    }
+
+    private static Object[] populateMethodParametersValues(String logicUrlPath, HttpServletRequest request, HttpServletResponse response, RestUrlCommandProcessorInfo restCommandProcessorInfo) {
+        Object[] parametersToPassInInvocation = REST_URL_UTIL_SERVICE.createParametersArray(restCommandProcessorInfo);
+        REST_URL_UTIL_SERVICE.populateParametersFromRequestUrl(logicUrlPath, restCommandProcessorInfo, parametersToPassInInvocation);
+        REST_URL_UTIL_SERVICE.populateHttpRequest(request, restCommandProcessorInfo, parametersToPassInInvocation);
+        REST_URL_UTIL_SERVICE.populateHttpResponse(response, restCommandProcessorInfo, parametersToPassInInvocation);
+        REST_URL_UTIL_SERVICE.populateRequestBody(request, restCommandProcessorInfo, parametersToPassInInvocation);
+        return parametersToPassInInvocation;
     }
 
     private void doGet(HttpServletRequest request,
