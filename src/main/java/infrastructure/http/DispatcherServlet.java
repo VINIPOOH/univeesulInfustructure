@@ -118,6 +118,23 @@ public class DispatcherServlet extends GenericServlet {
     private void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         log.debug("servlet called with request - " + request.getRequestURI());
+        if (request.getParameter("_method") != null) {
+            switch (request.getParameter("_method")) {
+                case "get":
+                    doGet(request, response);
+                    return;
+                case "put":
+                    doPut(request, response);
+                    return;
+                case "delete":
+                    doDelete(request, response);
+                    return;
+                case "post":
+                default:
+                    passOver(request, response, getMultipleMethodCommand(request).doPost(request));
+                    return;
+            }
+        }
 
         passOver(request, response, getMultipleMethodCommand(request).doPost(request));
     }
