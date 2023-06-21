@@ -8,7 +8,7 @@ import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 import java.util.List;
 
 @NeedConfig
-public abstract class AbstractTcpController implements TcpController {
+public abstract class AbstractTcpController<RequestType> implements TcpController<RequestType> {
 
     @InjectByType
     private TcpControllerNotificationService tcpControllerNotificationService;

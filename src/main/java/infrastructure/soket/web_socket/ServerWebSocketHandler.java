@@ -15,9 +15,10 @@ import lombok.SneakyThrows;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
-@ServerEndpoint(value = "/game", decoders = MassageDecoder.class, encoders = MassageEncoder.class)
+@ServerEndpoint(value = "/socket", decoders = MassageDecoder.class, encoders = MassageEncoder.class)
 public class ServerWebSocketHandler implements ConnectionNotificationSubscriber {
     public static final int HARDCODED_USER_ID = 12;
     //todo ivan find out how made thread wor here
@@ -48,9 +49,11 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
     public Object onMessage(Session session, SocketReceivedMessage request)
             throws IOException {
 
-        final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageType());
-        final Object message = convertJsonMassageToDto(request);
-        return tcpController.service(message, new WebSocketSession(session));
+        String requestMessageCode = request.getMessageCode();
+        Class messageTypeByCode = applicationContext.getMessageTypeByCode(requestMessageCode);
+        final TcpController tcpController = applicationContext.getTcpCommandController(requestMessageCode);
+
+        return tcpController.service(messageTypeByCode.cast(convertJsonMassageToDto(request)), new WebSocketSession(session));
     }
 
     @OnClose
@@ -65,15 +68,17 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
     @SneakyThrows
     @Override
     public void processMessage(SocketReceivedMessage request) {
-        final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageType());
-        final Object massage = convertJsonMassageToDto(request);
-        final Object response = tcpController.service(massage, new WebSocketSession(session));
+        String requestMessageCode = request.getMessageCode();
+        final TcpController tcpController = applicationContext.getTcpCommandController(requestMessageCode);
+        Class messageTypeByCode = applicationContext.getMessageTypeByCode(requestMessageCode);
+
+        final Object response = tcpController.service(messageTypeByCode.cast(convertJsonMassageToDto(request)), new WebSocketSession(session));;
         session.getBasicRemote().sendObject(response);
     }
 
     @SneakyThrows
     private Object convertJsonMassageToDto(SocketReceivedMessage socketReceivedMessage) {       //todo ivan add proper naming to message from out side and dto
-        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(socketReceivedMessage.getMessageType());
+        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(socketReceivedMessage.getMessageCode());
         return new Gson().fromJson(socketReceivedMessage.getJsonMessageData(), messageTypeByCode);
     }
 }

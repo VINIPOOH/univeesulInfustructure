@@ -67,7 +67,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 if (singleToneApplicationContext == null) {
                     Map<Class, Object> paramMap = new ConcurrentHashMap<>();
                     ApplicationContext context = new ApplicationContextImpl(new JavaConfig(""), paramMap,
-                            new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new HashMap<>(), new HashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
+                            new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
                     ObjectFactory objectFactory = new ObjectFactoryImpl(context);
                     context.setFactory(objectFactory);
                     context.init();

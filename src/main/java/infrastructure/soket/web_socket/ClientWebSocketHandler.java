@@ -46,7 +46,7 @@ public class ClientWebSocketHandler {
     @OnMessage
     public Object onMessage(Session session, SocketReceivedMessage request) {
 
-        final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageType());
+        final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageCode());
         final Object message = convertJsonMassageToDto(request);
         return tcpController.service(message, new WebSocketSession(session));
     }
@@ -63,7 +63,7 @@ public class ClientWebSocketHandler {
 
     @SneakyThrows
     private Object convertJsonMassageToDto(SocketReceivedMessage receivedMessage) {       //todo ivan add proper naming to message from out side and dto
-        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(receivedMessage.getMessageType());
+        final Class messageTypeByCode = applicationContext.getMessageTypeByCode(receivedMessage.getMessageCode());
         return new Gson().fromJson(receivedMessage.getJsonMessageData(), messageTypeByCode);
     }
 }

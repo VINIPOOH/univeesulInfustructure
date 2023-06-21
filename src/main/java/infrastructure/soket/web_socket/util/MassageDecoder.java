@@ -16,7 +16,7 @@ public class MassageDecoder implements Decoder.Text<SocketReceivedMessage>{
         final String typeCode = split[0];
         final String messageType = typeCode.toUpperCase();
         return SocketReceivedMessage.builder()
-                .messageType(messageType)
+                .messageCode(messageType)
                 .jsonMessageData(split[1])
                 .build();
     }

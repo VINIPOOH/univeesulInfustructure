@@ -54,7 +54,7 @@ public class TcpControllerNotificationServiceImpl implements TcpControllerNotifi
     @Override
     public void notifyUsersAboutNewGame(List<Integer> usersIds, String massageCode){
         SocketReceivedMessage request = SocketReceivedMessage.builder()
-                .messageType(massageCode).build();
+                .messageCode(massageCode).build();
 
         usersIds.forEach(
                 (s ->userIdToConnectionHandlerMap.get(s).processMessage(request)));
