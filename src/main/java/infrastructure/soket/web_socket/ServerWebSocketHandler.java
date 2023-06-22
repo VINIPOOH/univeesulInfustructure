@@ -15,7 +15,6 @@ import lombok.SneakyThrows;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Map;
 
 @ServerEndpoint(value = "/socket", decoders = MassageDecoder.class, encoders = MassageEncoder.class)
@@ -42,12 +41,11 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
             Session session) throws IOException {
         this.session = session;
         tcpSecurityService.isUserAuthorizedToRequest(session.getId());
-        tcpControllerNotificationService.registerNewSession(HARDCODED_USER_ID, this); // todo change session id on user id
+        tcpControllerNotificationService.registerNewEmptySession(session.getId(), this); // todo change session id on user id
     }
 
     @OnMessage
-    public Object onMessage(Session session, SocketReceivedMessage request)
-            throws IOException {
+    public Object onMessage(Session session, SocketReceivedMessage request) {
 
         String requestMessageCode = request.getMessageCode();
         Class messageTypeByCode = applicationContext.getMessageTypeByCode(requestMessageCode);

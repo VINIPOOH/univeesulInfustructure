@@ -5,6 +5,7 @@ import infrastructure.anotation.NeedConfig;
 import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
 
+import javax.websocket.Session;
 import java.util.List;
 
 @NeedConfig
@@ -19,5 +20,9 @@ public abstract class AbstractTcpController<RequestType> implements TcpControlle
 
     protected final void subscribeToUser(int userId, List<Integer> notifiersUsersIdsList) {
         tcpControllerNotificationService.subscribeOnUser(userId, notifiersUsersIdsList);
+    }
+
+    final void registerUserToSession(int userId, Session session){
+        tcpControllerNotificationService.registerUserToSession(userId, session.getId());
     }
 }
