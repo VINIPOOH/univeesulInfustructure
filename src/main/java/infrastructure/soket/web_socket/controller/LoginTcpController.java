@@ -3,8 +3,9 @@ package infrastructure.soket.web_socket.controller;
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.TcpEndpoint;
-import infrastructure.soket.web_socket.WebSocketSession;
 import lombok.SneakyThrows;
+
+import javax.websocket.Session;
 
 @NeedConfig
 @TcpEndpoint(requestMessageCode = "LOGIN")
@@ -15,12 +16,12 @@ public class LoginTcpController extends AbstractTcpController<LoginDto>{
 
     @SneakyThrows
     @Override
-    public Object service(LoginDto request, WebSocketSession session) {
-        if (loginWebSocketService.isUserAllowedToLogin(request.getId(), request.getPassword())){
-            session.getSession().close();
+    public Object service(LoginDto request, Session session) {
+        if (!loginWebSocketService.isUserAllowedToLogin(request.getId(), request.getPassword())){
+            session.close();
         }
 
-        registerUserToSession(request.getId(), session.getSession());
+        registerUserToSession(request.getId(), session);
         LoginResultDto loginResultDto = new LoginResultDto();
         loginResultDto.setLoginResult("SUCCESS");
         return loginResultDto;

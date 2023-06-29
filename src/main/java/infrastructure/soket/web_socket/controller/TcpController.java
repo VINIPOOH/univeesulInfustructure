@@ -1,8 +1,9 @@
 package infrastructure.soket.web_socket.controller;
 
-import infrastructure.soket.web_socket.WebSocketSession;
+
+import javax.websocket.Session;
 
 public interface TcpController<RequestType> {
 
-    Object service(RequestType request, WebSocketSession session);
+    Object service(RequestType request, Session session);
 }

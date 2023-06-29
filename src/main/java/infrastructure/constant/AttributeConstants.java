@@ -9,6 +9,7 @@ public interface AttributeConstants {
     String REQUEST_LANG = "lang";
     String SESSION_USER_ID = "USER_ID";
     String TCP_MESSAGE_TYPE_SPLITTER_REGEX = "\\|";
+    String TCP_MESSAGE_TYPE_SPLITTER = "|";
 
     String LOGGED_USER_NAMES = "loggedUserNames";
 

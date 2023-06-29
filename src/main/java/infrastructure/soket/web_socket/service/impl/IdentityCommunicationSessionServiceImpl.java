@@ -6,8 +6,9 @@ import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.Singleton;
 import infrastructure.soket.ConnectionNotificationSubscriber;
 import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
-import infrastructure.soket.web_socket.service.TcpControllerNotificationService;
+import infrastructure.soket.web_socket.service.IdentityCommunicationSessionService;
 
+import javax.websocket.Session;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,8 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @NeedConfig
 @Singleton
-public class TcpControllerNotificationServiceImpl implements TcpControllerNotificationService {
+public class IdentityCommunicationSessionServiceImpl implements IdentityCommunicationSessionService {
 
+    public static final String USER_ID = "USER_ID";
     @InjectByType
     private ApplicationContext applicationContext;
 
@@ -31,9 +33,15 @@ public class TcpControllerNotificationServiceImpl implements TcpControllerNotifi
 
 
     @Override
-    public void registerUserToSession(int userId, String session) {
-        userIdToSessionIdMap.put(userId, session);
+    public void registerUserToSession(int userId, Session session) {
+        session.getUserProperties().put(USER_ID, userId);
+        userIdToSessionIdMap.put(userId, session.getId());
         userIdToSubscribedUsersIdsMap.put(userId, new ArrayList<>());
+    }
+
+    @Override
+    public boolean isUserLongedIn(Session session) {
+        return session.getUserProperties().get(USER_ID) != null;
     }
 
     @Override

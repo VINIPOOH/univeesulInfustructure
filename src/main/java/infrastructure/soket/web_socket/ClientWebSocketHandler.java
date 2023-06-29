@@ -5,7 +5,7 @@ import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
-import infrastructure.soket.web_socket.service.WebSocketSecurityService;
+import infrastructure.soket.web_socket.service.IdentityCommunicationSessionService;
 import infrastructure.soket.web_socket.util.MassageDecoder;
 import infrastructure.soket.web_socket.util.MassageEncoder;
 import lombok.SneakyThrows;
@@ -15,19 +15,19 @@ import java.io.IOException;
 import java.net.URI;
 
 @ClientEndpoint(decoders = MassageDecoder.class, encoders = MassageEncoder.class)
-public class ClientWebSocketHandler {
+public class ClientWebSocketHandler {//с етип пока не понятно что делать, вероятно он не должен отличаться от сервер сокета
 
     public static final int HARDCODED_USER_ID = 12;
     //todo ivan find out how made thread wor here
 
-    private WebSocketSecurityService tcpSecurityService;
+    private IdentityCommunicationSessionService identityCommunicationSessionService;
     private ApplicationContext applicationContext;
     private Session session;
 
     public ClientWebSocketHandler(URI endpointURI) {
         applicationContext = ApplicationContextImpl.getContext();
         applicationContext.addObject(ServerWebSocketHandler.class, this);
-        tcpSecurityService = applicationContext.getObject(WebSocketSecurityService.class);
+        identityCommunicationSessionService = applicationContext.getObject(IdentityCommunicationSessionService.class);
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
             container.connectToServer(this, endpointURI);
@@ -40,7 +40,6 @@ public class ClientWebSocketHandler {
     public void onOpen(
             Session session) throws IOException {
         this.session = session;
-        tcpSecurityService.isUserAuthorizedToRequest(session.getId());
     }
 
     @OnMessage
@@ -48,7 +47,7 @@ public class ClientWebSocketHandler {
 
         final TcpController tcpController = applicationContext.getTcpCommandController(request.getMessageCode());
         final Object message = convertJsonMassageToDto(request);
-        return tcpController.service(message, new WebSocketSession(session));
+        return tcpController.service(message, session);
     }
 
     @OnClose

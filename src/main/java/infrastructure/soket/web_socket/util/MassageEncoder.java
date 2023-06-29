@@ -1,13 +1,13 @@
 package infrastructure.soket.web_socket.util;
 
+import com.google.gson.Gson;
 import infrastructure.ApplicationContextImpl;
 import lombok.SneakyThrows;
 
 import javax.websocket.Encoder;
 import javax.websocket.EndpointConfig;
-import com.google.gson.Gson;
 
-import static infrastructure.constant.AttributeConstants.TCP_MESSAGE_TYPE_SPLITTER_REGEX;
+import static infrastructure.constant.AttributeConstants.TCP_MESSAGE_TYPE_SPLITTER;
 
 public class MassageEncoder implements Encoder.Text<Object> {
     @SneakyThrows
@@ -17,7 +17,7 @@ public class MassageEncoder implements Encoder.Text<Object> {
 
     @Override
     public String encode(Object message) {
-        return ApplicationContextImpl.getContext().getMessageCodeByType(message.getClass()) + TCP_MESSAGE_TYPE_SPLITTER_REGEX
+        return ApplicationContextImpl.getContext().getMessageCodeByType(message.getClass()) + TCP_MESSAGE_TYPE_SPLITTER
                 + convertObjectToJson(message);
     }
 
