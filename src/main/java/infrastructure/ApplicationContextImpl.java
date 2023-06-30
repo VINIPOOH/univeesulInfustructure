@@ -115,6 +115,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         initSingletonAnnotatedObjects();
         initNetworkDto();
         initHttpControllers();
+        initRestControllers();
 
 
         for (Class<?> clazz : config.getImplClasses(Runnable.class)) {
@@ -124,6 +125,29 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
 
+    }
+
+    private void initRestControllers() {
+        if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.rest.controllers"))){
+            return;
+        }
+        for (Class<?> clazz : config.getTypesAnnotatedWith(RestEndpoint.class)) {
+            RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
+            if (annotation.isSingleton() && !annotation.isSingletonLazy()){
+                for (String resourceFromAnnotation : annotation.resource()) {
+                    String[] urlSteps = resourceFromAnnotation.split("\\/");
+                    urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
+                    String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/");
+                    String restCommandPattern = resourceFromAnnotation.replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/")
+                            .replaceAll("\\/\\{[^/]*\\}", "/?([^/])*");//change to make match any.
+                    //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
+                    Object commandProcessor = getObject(clazz);
+                    if (clazz.isAnnotationPresent(Singleton.class)) {
+                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor, urlSteps);
+                    }
+                }
+            }
+        }
     }
 
     private void initHttpControllers() {
@@ -137,7 +161,6 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
     }
-
     private void initNetworkDto() {
         if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.network.dto"))) {
             for (Class<?> clazz : config.getTypesAnnotatedWith(NetworkDto.class)) {
@@ -147,7 +170,6 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
     }
-
     private void initSingletonAnnotatedObjects() {
         if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.singleton"))) {
             for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
@@ -275,7 +297,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
                 if (requestUrl.matches(restCommandPattern)) {
                     Object commandProcessor = getObject(clazz);
-                    if (clazz.isAnnotationPresent(Singleton.class)) {//по хорошему нужно создать кеш в не зависимости от синглтонства. Потому что каждый раз для
+                    if (annotation.isSingleton()) {
                         cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor, urlSteps);
                     }
                     return RestUrlCommandProcessorInfo.builder()

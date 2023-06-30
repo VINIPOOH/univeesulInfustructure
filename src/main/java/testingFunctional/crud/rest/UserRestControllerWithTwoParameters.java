@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletResponse;
 
 @NeedConfig
 @RestEndpoint(resource = "/user/{user_id}/book/{bookId}")//in calling program need to be on start /rest todo make this prefix configurable
-@Singleton
 public class UserRestControllerWithTwoParameters {
 
     @InjectByType
