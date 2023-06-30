@@ -3,6 +3,7 @@ package infrastructure;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.factory.ObjectFactory;
 import infrastructure.http.controller.MultipleMethodController;
+import infrastructure.soket.web_socket.ClientWebSocketHandler;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.config.Config;
 
@@ -21,8 +22,7 @@ public interface ApplicationContext {
 
     void init();
 
-//    @SneakyThrows
-//    WebSocketMessageSender createClientWebSocketConnection(String serverPath);
+    ClientWebSocketHandler createClientWebSocketConnection(String serverPath);
 
     CurrencyInfo getCurrencyInfo(String langKey);
 
@@ -36,7 +36,7 @@ public interface ApplicationContext {
 
     TcpController getTcpCommandController(String messageType);
 
-    Class getMessageTypeByCode(String messageCode);
+    Class<?> getMessageTypeByCode(String messageCode);
 
     /**
      * retrieves message code by dto class

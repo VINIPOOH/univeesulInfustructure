@@ -14,4 +14,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface HttpEndpoint {
     String[] value();
+    boolean isSingleton() default true;
+    boolean isSingletonLazy() default false;
 }

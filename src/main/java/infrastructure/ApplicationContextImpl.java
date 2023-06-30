@@ -20,14 +20,17 @@ import infrastructure.factory.ObjectFactory;
 import infrastructure.factory.ObjectFactoryImpl;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.http.controller.PhantomController;
+import infrastructure.soket.web_socket.ClientWebSocketHandler;
 import infrastructure.soket.web_socket.controller.AbstractTcpController;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.util.RestUrlUtilService;
+import lombok.SneakyThrows;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,7 +55,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
-    private final Map<String, Class> messageTypeToMessageClass;//сделать конкарент хешмапу
+    private final Map<String, Class> messageTypeToMessageClass;
     private final Map<Class, String> massageClassToCode;
     private final Class defaultEndpoint = PhantomController.class;
     private final Config config;
@@ -110,8 +113,9 @@ public class ApplicationContextImpl implements ApplicationContext {
         log.debug("");
 
         initSingletonAnnotatedObjects();
-
         initNetworkDto();
+        initHttpControllers();
+
 
         for (Class<?> clazz : config.getImplClasses(Runnable.class)) {
             if (Arrays.stream(clazz.getAnnotations()).anyMatch(annotation -> annotation instanceof DemonThread)) {
@@ -120,6 +124,18 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
 
+    }
+
+    private void initHttpControllers() {
+        if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.http.controllers"))) {
+            for (Class<?> clazz : config.getTypesAnnotatedWith(HttpEndpoint.class)) {
+                HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
+                if (annotation.isSingleton() && !annotation.isSingletonLazy()) {
+                    MultipleMethodController toReturn = (MultipleMethodController) getObject(clazz);
+                    Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, toReturn));
+                }
+            }
+        }
     }
 
     private void initNetworkDto() {
@@ -144,14 +160,11 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
 
-//    @Override
-//    @SneakyThrows
-//    public WebSocketMessageSender createClientWebSocketConnection(String serverPath){
-//        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-//        final Session session = container.connectToServer(ClientWebSocketHandler.class,
-//                new URI("serverPath"));//ws://localhost:8080/balanser
-//        return new WebSocketMessageSender(this, session, new MassageEncoder());
-//    }
+    @Override
+    @SneakyThrows
+    public ClientWebSocketHandler createClientWebSocketConnection(String serverPath) {
+        return new ClientWebSocketHandler(new URI("serverPath"));
+    }
 
     public CurrencyInfo getCurrencyInfo(String langKey) {
         return currencies.get(langKey);
@@ -206,12 +219,14 @@ public class ApplicationContextImpl implements ApplicationContext {
                 return controllerMap.get(linkKey);
             }
             for (Class<?> clazz : config.getTypesAnnotatedWith(
-                    HttpEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
+                    HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 for (String i : annotation.value()) {
                     if (i.equals(linkKey)) {
                         MultipleMethodController toReturn = (MultipleMethodController) getObject(clazz);
-                        putToHttpCommandMapIfSingleton(linkKey, clazz, toReturn);
+                        if (annotation.isSingleton()) {
+                            Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, toReturn));
+                        }
                         return toReturn;
                     }
                 }
@@ -338,12 +353,17 @@ public class ApplicationContextImpl implements ApplicationContext {
     public Class<?> getMessageTypeByCode(String messageCode) {
         Class<?> messageClass = messageTypeToMessageClass.get(messageCode);
         if (messageClass == null) {
-            messageClass = config.getTypesAnnotatedWith(NetworkDto.class).stream()
-                    .filter(clazz -> clazz.getAnnotation(NetworkDto.class).massageCode().equals(messageCode))
-                    .findFirst()
-                    .get();//todo добавить дефолтний 404 ендпоинт
-            messageTypeToMessageClass.put(messageCode, messageClass);
-            massageClassToCode.put(messageClass, messageCode);
+            synchronized (messageTypeToMessageClass) {
+                messageClass = messageTypeToMessageClass.get(messageCode);
+                if (messageClass == null) {
+                    messageClass = config.getTypesAnnotatedWith(NetworkDto.class).stream()
+                            .filter(clazz -> clazz.getAnnotation(NetworkDto.class).massageCode().equals(messageCode))
+                            .findFirst()
+                            .get();//todo добавить дефолтний 404 ендпоинт
+                    messageTypeToMessageClass.put(messageCode, messageClass);
+                    massageClassToCode.put(messageClass, messageCode);
+                }
+            }
         }
 
         return messageClass;
@@ -353,11 +373,15 @@ public class ApplicationContextImpl implements ApplicationContext {
     public String getMessageCodeByType(Class<?> messageType) {
         String messageCode = massageClassToCode.get(messageType); //todo добавить дефолтний 404 ендпоинт
         if (messageCode == null) {
-            messageCode = messageType.getAnnotation(NetworkDto.class).massageCode();
-            messageTypeToMessageClass.put(messageCode, messageType);
-            massageClassToCode.put(messageType, messageCode);
+            synchronized (massageClassToCode) {
+                messageCode = massageClassToCode.get(messageType);
+                if (messageCode == null) {
+                    messageCode = messageType.getAnnotation(NetworkDto.class).massageCode();
+                    messageTypeToMessageClass.put(messageCode, messageType);
+                    massageClassToCode.put(messageType, messageCode);
+                }
+            }
         }
-
         return messageCode;
     }
 
@@ -377,12 +401,6 @@ public class ApplicationContextImpl implements ApplicationContext {
     private <T> void putToObjectsCashIfSingleton(Class<T> type, Class<? extends T> implClass, T instance) {
         if (implClass.isAnnotationPresent(Singleton.class)) {
             objectsCash.put(type, instance);
-        }
-    }
-
-    private void putToHttpCommandMapIfSingleton(String link, Class<?> clazz, MultipleMethodController toReturn) {
-        if (clazz.isAnnotationPresent(Singleton.class)) {
-            controllerMap.put(link, toReturn);
         }
     }
 

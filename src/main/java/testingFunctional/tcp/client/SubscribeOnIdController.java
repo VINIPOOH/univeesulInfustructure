@@ -9,7 +9,6 @@ import infrastructure.soket.web_socket.service.IdentityCommunicationSessionServi
 import javax.websocket.Session;
 
 @NeedConfig
-@Singleton
 public class SubscribeOnIdController extends AbstractTcpController<SubscribeToIdDto> {
 
     @InjectByType
