@@ -4,6 +4,7 @@ import infrastructure.anotation.DemonThread;
 import infrastructure.anotation.HttpEndpoint;
 import infrastructure.anotation.NetworkDto;
 import infrastructure.anotation.Singleton;
+import infrastructure.anotation.TcpEndpoint;
 import infrastructure.anotation.rest.RestDelete;
 import infrastructure.anotation.rest.RestEndpoint;
 import infrastructure.anotation.rest.RestGetAll;
@@ -28,6 +29,7 @@ import lombok.SneakyThrows;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.net.URI;
@@ -116,6 +118,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         initNetworkDto();
         initHttpControllers();
         initRestControllers();
+        initTcpEndpoints();
 
 
         for (Class<?> clazz : config.getImplClasses(Runnable.class)) {
@@ -125,6 +128,21 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
 
+    }
+
+    private void initTcpEndpoints() {
+        if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.tcp.controllers"))){
+            return;
+        }
+        for (Class<?> clazz : config.getSubTypesOf(AbstractTcpController.class)) {
+            ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
+            Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
+            TcpController toReturn = (TcpController) getObject(clazz);
+            TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
+            if (annotation != null && annotation.isSingleton() && !annotation.isSingletonLazy()){
+                messageTypeTcpCommandControllerMap.put(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode(), toReturn);
+            }
+        }
     }
 
     private void initRestControllers() {
@@ -363,7 +381,10 @@ public class ApplicationContextImpl implements ApplicationContext {
                 Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
                 if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
                     TcpController toReturn = (TcpController) getObject(clazz);
-                    putToTcpCommandMapIfSingleton(requestMessageType, clazz, toReturn);
+                    TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
+                    if (annotation.isSingleton() && annotation.isSingletonLazy()){
+                        messageTypeTcpCommandControllerMap.put(requestMessageType, toReturn);
+                    }
                     return toReturn;
                 }
             }
@@ -423,12 +444,6 @@ public class ApplicationContextImpl implements ApplicationContext {
     private <T> void putToObjectsCashIfSingleton(Class<T> type, Class<? extends T> implClass, T instance) {
         if (implClass.isAnnotationPresent(Singleton.class)) {
             objectsCash.put(type, instance);
-        }
-    }
-
-    private void putToTcpCommandMapIfSingleton(String messageType, Class<?> clazz, TcpController toReturn) {
-        if (clazz.isAnnotationPresent(Singleton.class)) {
-            messageTypeTcpCommandControllerMap.put(messageType, toReturn);
         }
     }
 }

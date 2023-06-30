@@ -1,10 +1,11 @@
 package testingFunctional.tcp.client;
 
+import infrastructure.anotation.TcpEndpoint;
 import infrastructure.soket.web_socket.controller.AbstractTcpController;
 
 import javax.websocket.Session;
 
-
+@TcpEndpoint
 public class IdAndNameReceiveController extends AbstractTcpController<IdAndNameDto> {
 
     @Override
