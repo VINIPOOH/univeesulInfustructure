@@ -7,9 +7,11 @@ import javax.websocket.Session;
 import java.util.List;
 
 public interface IdentityCommunicationSessionService {
-    void sendShearedState(int senderId, SocketReceivedMessage message);
+    void sendShearedState(Session senderSession, Object message);
 
     void registerNewEmptySession(String sessionId, ConnectionNotificationSubscriber subscriber);
+
+    int getUserId(Session session);
 
     void subscribeOnUser(int subscriberId, List<Integer> notifiersList);
 

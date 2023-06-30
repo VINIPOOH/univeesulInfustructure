@@ -2,7 +2,9 @@ package testingFunctional.tcp.client;
 
 import infrastructure.anotation.NetworkDto;
 
-@NetworkDto(massageCode = "ID_AND_NAME_INLINED_DTO")
+import static testingFunctional.tcp.client.RequestCodes.ID_AND_NAME_INLINED_DTO;
+
+@NetworkDto(massageCode = ID_AND_NAME_INLINED_DTO)
 public class IdAndNameInlinedDto {
     private String allInfoInOneString;
 

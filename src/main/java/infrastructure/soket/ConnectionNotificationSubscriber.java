@@ -5,5 +5,5 @@ import lombok.SneakyThrows;
 
 public interface ConnectionNotificationSubscriber {
     @SneakyThrows
-    void processMessage(SocketReceivedMessage request);
+    void processMessage(Object request);
 }

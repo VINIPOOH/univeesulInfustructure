@@ -52,21 +52,23 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
 
     @OnClose
     public void onClose(Session session) throws IOException {
-
+//todo add here removing from listeners list
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
+        //todo add here removing from listeners list
+
     }
 
     @SneakyThrows
     @Override
-    public void processMessage(SocketReceivedMessage request) {
-        String requestMessageCode = request.getMessageCode();
-        final TcpController tcpController = applicationContext.getTcpCommandController(requestMessageCode);
-        Class messageTypeByCode = applicationContext.getMessageTypeByCode(requestMessageCode);
+    public void processMessage(Object request) {
+        String messageCode = applicationContext.getMessageCodeByType(request.getClass());
+        final TcpController tcpController = applicationContext.getTcpCommandController(messageCode);
 
-        final Object response = tcpController.service(messageTypeByCode.cast(convertJsonMassageToDto(request)), session);
+
+        final Object response = tcpController.service(request, session);
         session.getBasicRemote().sendObject(response);
     }
 

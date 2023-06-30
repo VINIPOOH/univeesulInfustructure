@@ -14,8 +14,8 @@ public abstract class AbstractTcpController<RequestType> implements TcpControlle
     @InjectByType
     private IdentityCommunicationSessionService identityCommunicationSessionService;
 
-    protected final void forwardStateChangeNotification(int userId, SocketReceivedMessage message) {
-        identityCommunicationSessionService.sendShearedState(userId, message);
+    protected final void forwardStateChangeNotification(Session senderSession, Object message) {
+        identityCommunicationSessionService.sendShearedState(senderSession, message);
     }
 
     protected final void subscribeToUser(int userId, List<Integer> notifiersUsersIdsList) {

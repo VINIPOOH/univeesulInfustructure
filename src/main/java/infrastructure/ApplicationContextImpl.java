@@ -328,7 +328,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     @Override
     public String getMessageCodeByType(Object messageType) {
-        return massageClassToCode.get(messageType);
+        return massageClassToCode.getOrDefault(messageType, messageType.getClass().toString());
     }
 
     @Override

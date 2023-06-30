@@ -45,6 +45,11 @@ public class IdentityCommunicationSessionServiceImpl implements IdentityCommunic
     }
 
     @Override
+    public int getUserId(Session session){
+        return (Integer) session.getUserProperties().get(USER_ID);
+    }
+
+    @Override
     public void subscribeOnUser(int subscriberId, List<Integer> idsOfNotisiers) {
         idsOfNotisiers.stream().forEach(notifierId -> {
             userIdToSubscribedUsersIdsMap.compute(notifierId, (notifierId1, notificationReviversIds) -> {
@@ -55,8 +60,8 @@ public class IdentityCommunicationSessionServiceImpl implements IdentityCommunic
     }
 
     @Override
-    public void sendShearedState(int senderId, SocketReceivedMessage message) {
-        userIdToSubscribedUsersIdsMap.get(senderId)
+    public void sendShearedState(Session senderSession, Object message) {
+        userIdToSubscribedUsersIdsMap.get(getUserId(senderSession))
                 .forEach(integer -> {
                     String sessionId = userIdToSessionIdMap.get(integer);
                     ConnectionNotificationSubscriber connectionNotificationSubscriber = sessionIdToConnectionHandlerMap.get(sessionId);

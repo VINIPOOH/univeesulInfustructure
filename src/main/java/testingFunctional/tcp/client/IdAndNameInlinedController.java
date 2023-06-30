@@ -11,7 +11,6 @@ import static testingFunctional.tcp.client.RequestCodes.ID_AND_NAME_INLINED_DTO;
 public class IdAndNameInlinedController extends AbstractTcpController<IdAndNameInlinedDto> {
     @Override
     public Object service(IdAndNameInlinedDto request, Session session) {
-        request.setAllInfoInOneString(request.getAllInfoInOneString());
-        return request;
+        return "anoter User sended" + request.getAllInfoInOneString();
     }
 }

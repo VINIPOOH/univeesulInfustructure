@@ -15,6 +15,7 @@ public class IdAndNameReceiveController extends AbstractTcpController<IdAndNameD
     public Object service(IdAndNameDto request, Session session) {
         IdAndNameInlinedDto idAndNameInlinedDto = new IdAndNameInlinedDto();
         idAndNameInlinedDto.setAllInfoInOneString("recived name is " + request.getName() + " recievd ID is " + request.getId());
+        forwardStateChangeNotification(session, idAndNameInlinedDto);
         return idAndNameInlinedDto;
     }
 }
