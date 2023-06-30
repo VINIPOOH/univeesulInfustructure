@@ -110,11 +110,13 @@ public class ApplicationContextImpl implements ApplicationContext {
         objectsCash.put(ApplicationContext.class, this);
         log.debug("");
 
-        for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
-            Singleton annotation = clazz.getAnnotation(Singleton.class);
-            if (!annotation.isLazy()) {
-                log.debug("created" + clazz.getName());
-                getObject(clazz);
+        if(Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.singleton"))){
+            for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
+                Singleton annotation = clazz.getAnnotation(Singleton.class);
+                if (!annotation.isLazy()) {
+                    log.debug("created" + clazz.getName());
+                    getObject(clazz);
+                }
             }
         }
 
@@ -310,7 +312,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
                 return messageTypeTcpCommandControllerMap.get(requestMessageType);
             }
-            for (Class<?> clazz : config.getSubTypesOf(AbstractTcpController.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
+            for (Class<?> clazz : config.getSubTypesOf(AbstractTcpController.class)) {
                 ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
                 Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
                 if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
