@@ -28,7 +28,6 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,7 +52,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
-    private final Map<String, Class> messageTypeToMessageClass;
+    private final Map<String, Class> messageTypeToMessageClass;//сделать конкарент хешмапу
     private final Map<Class, String> massageClassToCode;
     private final Class defaultEndpoint = PhantomController.class;
     private final Config config;
@@ -110,21 +109,9 @@ public class ApplicationContextImpl implements ApplicationContext {
         objectsCash.put(ApplicationContext.class, this);
         log.debug("");
 
-        if(Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.singleton"))){
-            for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
-                Singleton annotation = clazz.getAnnotation(Singleton.class);
-                if (!annotation.isLazy()) {
-                    log.debug("created" + clazz.getName());
-                    getObject(clazz);
-                }
-            }
-        }
+        initSingletonAnnotatedObjects();
 
-        for (Class<?> clazz : config.getTypesAnnotatedWith(NetworkDto.class)) {
-            NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
-            messageTypeToMessageClass.put(annotation.massageCode(), clazz);
-            massageClassToCode.put(clazz, annotation.massageCode());
-        }
+        initNetworkDto();
 
         for (Class<?> clazz : config.getImplClasses(Runnable.class)) {
             if (Arrays.stream(clazz.getAnnotations()).anyMatch(annotation -> annotation instanceof DemonThread)) {
@@ -133,6 +120,28 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
 
+    }
+
+    private void initNetworkDto() {
+        if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.network.dto"))) {
+            for (Class<?> clazz : config.getTypesAnnotatedWith(NetworkDto.class)) {
+                NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
+                messageTypeToMessageClass.put(annotation.massageCode(), clazz);
+                massageClassToCode.put(clazz, annotation.massageCode());
+            }
+        }
+    }
+
+    private void initSingletonAnnotatedObjects() {
+        if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.singleton"))) {
+            for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
+                Singleton annotation = clazz.getAnnotation(Singleton.class);
+                if (!annotation.isLazy()) {
+                    log.debug("created" + clazz.getName());
+                    getObject(clazz);
+                }
+            }
+        }
     }
 
 //    @Override
@@ -326,13 +335,30 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     @Override
-    public Class getMessageTypeByCode(String messageCode) {
-        return messageTypeToMessageClass.get(messageCode);
+    public Class<?> getMessageTypeByCode(String messageCode) {
+        Class<?> messageClass = messageTypeToMessageClass.get(messageCode);
+        if (messageClass == null) {
+            messageClass = config.getTypesAnnotatedWith(NetworkDto.class).stream()
+                    .filter(clazz -> clazz.getAnnotation(NetworkDto.class).massageCode().equals(messageCode))
+                    .findFirst()
+                    .get();//todo добавить дефолтний 404 ендпоинт
+            messageTypeToMessageClass.put(messageCode, messageClass);
+            massageClassToCode.put(messageClass, messageCode);
+        }
+
+        return messageClass;
     }
 
     @Override
-    public String getMessageCodeByType(Object messageType) {
-        return massageClassToCode.getOrDefault(messageType, messageType.getClass().toString());
+    public String getMessageCodeByType(Class<?> messageType) {
+        String messageCode = massageClassToCode.get(messageType); //todo добавить дефолтний 404 ендпоинт
+        if (messageCode == null) {
+            messageCode = messageType.getAnnotation(NetworkDto.class).massageCode();
+            messageTypeToMessageClass.put(messageCode, messageType);
+            massageClassToCode.put(messageType, messageCode);
+        }
+
+        return messageCode;
     }
 
     @Override

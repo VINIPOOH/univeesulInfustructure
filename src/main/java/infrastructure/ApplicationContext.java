@@ -44,7 +44,7 @@ public interface ApplicationContext {
      * @param messageType key for getting code
      * @return kod of message
      */
-    String getMessageCodeByType(Object messageType);
+    String getMessageCodeByType(Class<?> messageType);
 
     void setFactory(ObjectFactory factory);
 

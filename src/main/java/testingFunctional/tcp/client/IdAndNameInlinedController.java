@@ -7,6 +7,8 @@ import javax.websocket.Session;
 public class IdAndNameInlinedController extends AbstractTcpController<IdAndNameInlinedDto> {
     @Override
     public Object service(IdAndNameInlinedDto request, Session session) {
-        return "anoter User sended" + request.getAllInfoInOneString();
+        IdAndNameInlinedDto idAndNameInlinedDto = new IdAndNameInlinedDto();
+        idAndNameInlinedDto.setAllInfoInOneString("anoter User sended" + request.getAllInfoInOneString());
+        return idAndNameInlinedDto;
     }
 }
