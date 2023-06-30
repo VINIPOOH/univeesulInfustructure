@@ -2,13 +2,11 @@ package infrastructure.soket.web_socket.controller;
 
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
-import infrastructure.anotation.TcpEndpoint;
 import lombok.SneakyThrows;
 
 import javax.websocket.Session;
 
 @NeedConfig
-@TcpEndpoint(requestMessageCode = "LOGIN")
 public class LoginTcpController extends AbstractTcpController<LoginDto>{
 
     @InjectByType

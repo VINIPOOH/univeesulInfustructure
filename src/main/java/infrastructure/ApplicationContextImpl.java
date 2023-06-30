@@ -4,13 +4,14 @@ import infrastructure.anotation.DemonThread;
 import infrastructure.anotation.HttpEndpoint;
 import infrastructure.anotation.NetworkDto;
 import infrastructure.anotation.Singleton;
-import infrastructure.anotation.TcpEndpoint;
 import infrastructure.anotation.rest.RestDelete;
 import infrastructure.anotation.rest.RestEndpoint;
 import infrastructure.anotation.rest.RestGetAll;
 import infrastructure.anotation.rest.RestGetById;
 import infrastructure.anotation.rest.RestPut;
 import infrastructure.anotation.rest.RestUpdate;
+import infrastructure.config.Config;
+import infrastructure.config.JavaConfig;
 import infrastructure.currency.CurrencyInfo;
 import infrastructure.currency.CurrencyInfoFromFileLoader;
 import infrastructure.currency.CurrencyInfoLoader;
@@ -19,12 +20,15 @@ import infrastructure.factory.ObjectFactory;
 import infrastructure.factory.ObjectFactoryImpl;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.http.controller.PhantomController;
+import infrastructure.soket.web_socket.controller.AbstractTcpController;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.util.RestUrlUtilService;
-import infrastructure.config.Config;
-import infrastructure.config.JavaConfig;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -33,9 +37,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 /**
  * Represents info about context in which application run.
@@ -309,9 +310,10 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
                 return messageTypeTcpCommandControllerMap.get(requestMessageType);
             }
-            for (Class<?> clazz : config.getTypesAnnotatedWith(TcpEndpoint.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
-                TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
-                if (requestMessageType.equals(annotation.requestMessageCode())) {
+            for (Class<?> clazz : config.getSubTypesOf(AbstractTcpController.class)) {//todo make consider setting this mup on startup it may slow down upping system but removes necessary to run this code for each Tcp controller
+                ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
+                Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
+                if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
                     TcpController toReturn = (TcpController) getObject(clazz);
                     putToTcpCommandMapIfSingleton(requestMessageType, clazz, toReturn);
                     return toReturn;
