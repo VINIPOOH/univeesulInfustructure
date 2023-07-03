@@ -24,7 +24,9 @@ import infrastructure.http.controller.PhantomController;
 import infrastructure.rest.Rest404Controller;
 import infrastructure.soket.web_socket.ClientWebSocketHandler;
 import infrastructure.soket.web_socket.controller.AbstractTcpController;
+import infrastructure.soket.web_socket.controller.Error404DefaultController;
 import infrastructure.soket.web_socket.controller.TcpController;
+import infrastructure.soket.web_socket.dto.Error404Dto;
 import infrastructure.util.RestUrlUtilService;
 import lombok.SneakyThrows;
 import org.apache.log4j.LogManager;
@@ -399,7 +401,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 }
             }
         }
-        return (TcpController) getObject(defaultEndpoint);
+        return getObject(Error404DefaultController.class);
     }
 
     @Override
@@ -409,12 +411,16 @@ public class ApplicationContextImpl implements ApplicationContext {
             synchronized (messageTypeToMessageClass) {
                 messageClass = messageTypeToMessageClass.get(messageCode);
                 if (messageClass == null) {
-                    messageClass = getConfig().getTypesAnnotatedWith(NetworkDto.class).stream()
+                    Optional<Class<?>> optionalMessageClass = getConfig().getTypesAnnotatedWith(NetworkDto.class).stream()
                             .filter(clazz -> clazz.getAnnotation(NetworkDto.class).massageCode().equals(messageCode))
-                            .findFirst()
-                            .get();//todo добавить дефолтний 404 ендпоинт
-                    messageTypeToMessageClass.put(messageCode, messageClass);
-                    massageClassToCode.put(messageClass, messageCode);
+                            .findFirst();
+                    if (optionalMessageClass.isPresent()){
+                        messageTypeToMessageClass.put(messageCode, optionalMessageClass.get());
+                        massageClassToCode.put(optionalMessageClass.get(), messageCode);
+                    }
+                    else {
+                        messageClass = Error404Dto.class;
+                    }
                 }
             }
         }
@@ -424,7 +430,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     @Override
     public String getMessageCodeByType(Class<?> messageType) {
-        String messageCode = massageClassToCode.get(messageType); //todo добавить дефолтний 404 ендпоинт
+        String messageCode = massageClassToCode.get(messageType);
         if (messageCode == null) {
             synchronized (massageClassToCode) {
                 messageCode = massageClassToCode.get(messageType);
