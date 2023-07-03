@@ -7,8 +7,6 @@ import infrastructure.soket.web_socket.ClientWebSocketHandler;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.config.Config;
 
-import java.util.ResourceBundle;
-
 /**
  * Represents info about context in which application run.
  * Contains info about currency rates.
@@ -18,7 +16,7 @@ import java.util.ResourceBundle;
  * @version 1.0
  */
 public interface ApplicationContext {
-    ResourceBundle getApplicationConfigurationBundle();
+    public String getPropertyValue(String key);
 
     void init();
 

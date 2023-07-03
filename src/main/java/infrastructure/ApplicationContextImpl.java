@@ -115,6 +115,11 @@ public class ApplicationContextImpl implements ApplicationContext {
         urlMatchPatternToCommandProcessorInfo = new HashMap<>();
     }
 
+    @Override
+    public String getPropertyValue(String key) {
+        return applicationConfigurationBundle.getString(key);
+    }
+
     /**
      * used to preload not lazy singletons
      */
@@ -132,7 +137,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private void startDemonThreads() {
-        if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.demon.threads"))){
+        if (!Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.demon.threads"))){
             return;
         }
         for (Class<?> clazz : getConfig().getTypesAnnotatedWith(DemonThread.class)) {
@@ -142,7 +147,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private void initTcpEndpoints() {
-        if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.tcp.controllers"))){
+        if (!Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.tcp.controllers"))){
             return;
         }
         for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
@@ -157,7 +162,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private void initRestControllers() {
-        if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.rest.controllers"))){
+        if (!Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.rest.controllers"))){
             return;
         }
         for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
@@ -179,7 +184,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private void initHttpControllers() {
-        if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.http.controllers"))) {
+        if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.http.controllers"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 if (annotation.isSingleton() && !annotation.isSingletonLazy()) {
@@ -190,7 +195,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
     private void initNetworkDto() {
-        if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.network.dto"))) {
+        if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.network.dto"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(NetworkDto.class)) {
                 NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
                 messageTypeToMessageClass.put(annotation.massageCode(), clazz);
@@ -199,7 +204,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
     private void initSingletonAnnotatedObjects() {
-        if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.singleton"))) {
+        if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.singleton"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(Singleton.class)) {
                 Singleton annotation = clazz.getAnnotation(Singleton.class);
                 if (!annotation.isLazy()) {
@@ -444,11 +449,6 @@ public class ApplicationContextImpl implements ApplicationContext {
         return messageCode;
     }
 
-    @Override
-    public ResourceBundle getApplicationConfigurationBundle() {
-        return applicationConfigurationBundle;
-    }
-
     public void setFactory(ObjectFactory factory) {
         this.factory = factory;
     }
@@ -457,7 +457,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         if (this.config == null) {
             synchronized (this) {
                 if (this.config == null) {
-                    this.config = new JavaConfig(applicationConfigurationBundle.getString("infrastructure.package.to.annotation.scan"));
+                    this.config = new JavaConfig(getPropertyValue("infrastructure.package.to.annotation.scan"));
                 }
             }
         }

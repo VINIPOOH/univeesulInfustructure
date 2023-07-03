@@ -61,8 +61,8 @@ public class DispatcherServlet extends GenericServlet {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String logicUrlPath = request.getRequestURI().replaceFirst(
-                ".*" + context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), "");
-        if (logicUrlPath.startsWith(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX))) {
+                ".*" + context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), "");
+        if (logicUrlPath.startsWith(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX))) {
             passOver(request, response, processRestRequest(logicUrlPath, request, response));
         } else {
             processGeneralHttpRequest((HttpServletResponse) servletResponse, request);
@@ -88,7 +88,7 @@ public class DispatcherServlet extends GenericServlet {
 
     private String processRestRequest(String logicUrlPath, HttpServletRequest request,
                                       HttpServletResponse response) {
-        logicUrlPath = logicUrlPath.replaceFirst(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX), "");
+        logicUrlPath = logicUrlPath.replaceFirst(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX), "");
         RestUrlCommandProcessorInfo restCommandProcessorInfo = ApplicationContextImpl.getContext().getRestCommand(logicUrlPath, request.getMethod());
 
         Object[] parametersToPassInInvocation = populateMethodParametersValues(logicUrlPath, request, response, restCommandProcessorInfo);
@@ -160,12 +160,12 @@ public class DispatcherServlet extends GenericServlet {
     private MultipleMethodController getMultipleMethodCommand(HttpServletRequest request) {
         return ApplicationContextImpl.getContext()
                 .getHttpCommand(request.getRequestURI().replaceFirst
-                        (".*" + context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), ""));
+                        (".*" + context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), ""));
     }
 
     private void passOver(HttpServletRequest request, HttpServletResponse response, String page) throws IOException, ServletException {
-        if (page.contains(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX))) {
-            response.sendRedirect(page.replace(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX), ""));
+        if (page.contains(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX))) {
+            response.sendRedirect(page.replace(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX), ""));
         } else if (page.startsWith(JSON_RESPONSE)) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

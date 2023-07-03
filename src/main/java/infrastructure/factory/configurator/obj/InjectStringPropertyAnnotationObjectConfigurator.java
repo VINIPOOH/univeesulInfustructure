@@ -23,8 +23,8 @@ public class InjectStringPropertyAnnotationObjectConfigurator implements ObjectC
             InjectStringProperty annotation = field.getAnnotation(InjectStringProperty.class);
             if (annotation != null) {
                 String value = annotation.value().isEmpty() ?
-                        context.getApplicationConfigurationBundle().getString(field.getName()) :
-                        context.getApplicationConfigurationBundle().getString(annotation.value());
+                        context.getPropertyValue(field.getName()) :
+                        context.getPropertyValue(annotation.value());
                 field.setAccessible(true);
                 try {
                     field.set(instance, value);
