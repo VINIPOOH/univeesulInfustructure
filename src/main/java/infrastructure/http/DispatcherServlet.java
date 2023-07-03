@@ -57,8 +57,8 @@ public class DispatcherServlet extends GenericServlet {
     public void service(ServletRequest servletRequest, ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        String logicUrlPath = request.getRequestURI().replaceFirst(".*/delivery/", "");
-        if (logicUrlPath.startsWith("/rest/")) {//todo етот иф можно заменить патерном команда в будйщем если потребуется
+        String logicUrlPath = request.getRequestURI().replaceFirst(".*/delivery/", "");//todo property
+        if (logicUrlPath.startsWith("/rest/")) {//todo property
             passOver(request, response, processRestRequest(logicUrlPath, request, response));
         } else {
             processGeneralHttpRequest((HttpServletResponse) servletResponse, request);
@@ -160,7 +160,7 @@ public class DispatcherServlet extends GenericServlet {
 
     private void passOver(HttpServletRequest request, HttpServletResponse response, String page) throws IOException, ServletException {
         if (page.contains("redirect:")) {
-            response.sendRedirect(page.replace("redirect:", "")); //
+            response.sendRedirect(page.replace("redirect:", "")); //todo property
         } else if (page.startsWith(JSON_RESPONSE)) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");

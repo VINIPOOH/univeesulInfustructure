@@ -17,9 +17,6 @@ import java.net.URI;
 @ClientEndpoint(decoders = MassageDecoder.class, encoders = MassageEncoder.class)
 public class ClientWebSocketHandler {//с етип пока не понятно что делать, вероятно он не должен отличаться от сервер сокета
 
-    public static final int HARDCODED_USER_ID = 12;
-    //todo ivan find out how made thread wor here
-
     private IdentityCommunicationSessionService identityCommunicationSessionService;
     private ApplicationContext applicationContext;
     private Session session;
@@ -61,7 +58,7 @@ public class ClientWebSocketHandler {//с етип пока не понятно 
 
 
     @SneakyThrows
-    private Object convertJsonMassageToDto(SocketReceivedMessage receivedMessage) {       //todo ivan add proper naming to message from out side and dto
+    private Object convertJsonMassageToDto(SocketReceivedMessage receivedMessage) {
         final Class messageTypeByCode = applicationContext.getMessageTypeByCode(receivedMessage.getMessageCode());
         return new Gson().fromJson(receivedMessage.getJsonMessageData(), messageTypeByCode);
     }

@@ -73,7 +73,7 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
     }
 
     @SneakyThrows
-    private Object convertJsonMassageToDto(SocketReceivedMessage socketReceivedMessage) {       //todo ivan add proper naming to message from out side and dto
+    private Object convertJsonMassageToDto(SocketReceivedMessage socketReceivedMessage) {
         final Class messageTypeByCode = applicationContext.getMessageTypeByCode(socketReceivedMessage.getMessageCode());
         return new Gson().fromJson(socketReceivedMessage.getJsonMessageData(), messageTypeByCode);
     }

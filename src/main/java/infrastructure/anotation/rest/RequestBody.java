@@ -11,7 +11,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Vendelovskyi Ivan
  * @version 1.0
  */
-//todo ivan add support of this annotation for httpEndpoint
 @Inherited
 @Target(ElementType.PARAMETER)
 @Retention(RUNTIME)
