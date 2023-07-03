@@ -2,7 +2,6 @@ package infrastructure.soket.web_socket.controller;
 
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
-import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 import infrastructure.soket.web_socket.service.IdentityCommunicationSessionService;
 
 import javax.websocket.Session;
@@ -18,8 +17,12 @@ public abstract class AbstractTcpController<RequestType> implements TcpControlle
         identityCommunicationSessionService.sendShearedState(senderSession, message);
     }
 
-    protected final void subscribeToUser(int userId, List<Integer> notifiersUsersIdsList) {
-        identityCommunicationSessionService.subscribeOnUser(userId, notifiersUsersIdsList);
+    protected final void subscribeToUsers(int userId, List<Integer> notifiersUsersIdsList) {
+        identityCommunicationSessionService.subscribeOnUsers(userId, notifiersUsersIdsList);
+    }
+
+    protected final void unsubscribeOnUsers(int userId, List<Integer> notifiersUsersIdsList) {
+        identityCommunicationSessionService.unsubscribeOnUsers(userId, notifiersUsersIdsList);
     }
 
     final void registerUserToSession(int userId, Session session){

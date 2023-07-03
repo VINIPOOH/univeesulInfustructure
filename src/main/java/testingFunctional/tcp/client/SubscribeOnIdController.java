@@ -2,7 +2,6 @@ package testingFunctional.tcp.client;
 
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
-import infrastructure.anotation.Singleton;
 import infrastructure.anotation.TcpEndpoint;
 import infrastructure.soket.web_socket.controller.AbstractTcpController;
 import infrastructure.soket.web_socket.service.IdentityCommunicationSessionService;
@@ -18,7 +17,7 @@ public class SubscribeOnIdController extends AbstractTcpController<SubscribeToId
 
     @Override
     public Object service(SubscribeToIdDto request, Session session) {
-        subscribeToUser(identityCommunicationSessionService.getUserId(session), request.getIdsToSubscribe());
+        subscribeToUsers(identityCommunicationSessionService.getUserId(session), request.getIdsToSubscribe());
         return "Successes";
     }
 }

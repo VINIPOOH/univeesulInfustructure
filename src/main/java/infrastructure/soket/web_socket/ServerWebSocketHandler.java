@@ -12,7 +12,11 @@ import infrastructure.soket.web_socket.util.MassageDecoder;
 import infrastructure.soket.web_socket.util.MassageEncoder;
 import lombok.SneakyThrows;
 
-import javax.websocket.*;
+import javax.websocket.OnClose;
+import javax.websocket.OnError;
+import javax.websocket.OnMessage;
+import javax.websocket.OnOpen;
+import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 
@@ -51,14 +55,13 @@ public class ServerWebSocketHandler implements ConnectionNotificationSubscriber 
     }
 
     @OnClose
-    public void onClose(Session session) throws IOException {
-//todo add here removing from listeners list
+    public void onClose(Session session) {
+        identityCommunicationSessionService.closeSession(session);
     }
 
     @OnError
     public void onError(Session session, Throwable throwable) {
-        //todo add here removing from listeners list
-
+        identityCommunicationSessionService.closeSession(session);
     }
 
     @SneakyThrows

@@ -5,7 +5,6 @@ import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.Singleton;
 import infrastructure.soket.ConnectionNotificationSubscriber;
-import infrastructure.soket.web_socket.dto.SocketReceivedMessage;
 import infrastructure.soket.web_socket.service.IdentityCommunicationSessionService;
 
 import javax.websocket.Session;
@@ -45,15 +44,32 @@ public class IdentityCommunicationSessionServiceImpl implements IdentityCommunic
     }
 
     @Override
+    public void closeSession(Session session) {
+        int userId = getUserId(session);
+        userIdToSessionIdMap.remove(userId);
+        sessionIdToConnectionHandlerMap.remove(session.getId());
+    }
+
+    @Override
     public int getUserId(Session session){
         return (Integer) session.getUserProperties().get(USER_ID);
     }
 
     @Override
-    public void subscribeOnUser(int subscriberId, List<Integer> idsOfNotisiers) {
-        idsOfNotisiers.stream().forEach(notifierId -> {
-            userIdToSubscribedUsersIdsMap.compute(notifierId, (notifierId1, notificationReviversIds) -> {
+    public void subscribeOnUsers(int subscriberId, List<Integer> idsOfNotisiers) {
+        idsOfNotisiers.forEach(notifierId -> {
+            userIdToSubscribedUsersIdsMap.computeIfPresent(notifierId, (notifierId1, notificationReviversIds) -> {
                 notificationReviversIds.add(subscriberId);
+                return notificationReviversIds;
+            });
+        });
+    }
+
+    @Override
+    public void unsubscribeOnUsers(int subscriberId, List<Integer> idsOfNotisiers) {
+        idsOfNotisiers.forEach(notifierId -> {
+            userIdToSubscribedUsersIdsMap.computeIfPresent(notifierId, (notifierId1, notificationReviversIds) -> {
+                notificationReviversIds.remove(subscriberId);
                 return notificationReviversIds;
             });
         });
