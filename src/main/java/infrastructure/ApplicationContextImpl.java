@@ -52,6 +52,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ApplicationContextImpl implements ApplicationContext {
     private static final Logger log = LogManager.getLogger(ApplicationContextImpl.class);
+    public static final String URL_STEP_DELIMITER = "/";
+    public static final String REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER = "/[^/]*/";
+    public static final String URL_STEP_SPLIT_REGEX = "\\" + URL_STEP_DELIMITER;
+    public static final String REST_URL_VARIABLE_REGEX = "\\{[^/]*\\}";
+    public static final String REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX = "\\" + URL_STEP_DELIMITER + REST_URL_VARIABLE_REGEX + "\\" + URL_STEP_DELIMITER;
+    public static final String REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX = "\\" + URL_STEP_DELIMITER + REST_URL_VARIABLE_REGEX;
+    public static final String REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER = "/?([^/])*";
     private final Map<Class, Object> objectsCash;
     private final Map<String, MultipleMethodController> controllerMap;
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
@@ -155,12 +162,11 @@ public class ApplicationContextImpl implements ApplicationContext {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
             if (annotation.isSingleton() && !annotation.isSingletonLazy()){
                 for (String resourceFromAnnotation : annotation.resource()) {
-                    String[] urlSteps = resourceFromAnnotation.split("\\/");
+                    String[] urlSteps = resourceFromAnnotation.split(URL_STEP_SPLIT_REGEX);
                     urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
-                    String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/");
-                    String restCommandPattern = resourceFromAnnotation.replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/")
-                            .replaceAll("\\/\\{[^/]*\\}", "/?([^/])*");//change to make match any.
-                    //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
+                    String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
+                    String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
+                            .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
                     Object commandProcessor = getObject(clazz);
                     if (clazz.isAnnotationPresent(Singleton.class)) {
                         cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor, urlSteps);
@@ -309,12 +315,11 @@ public class ApplicationContextImpl implements ApplicationContext {
         for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
             for (String resourceFromAnnotation : annotation.resource()) {
-                String[] urlSteps = resourceFromAnnotation.split("\\/");
+                String[] urlSteps = resourceFromAnnotation.split(URL_STEP_SPLIT_REGEX);
                 urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
-                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/");
-                String restCommandPattern = resourceFromAnnotation.replaceAll("\\/\\{[^/]*\\}\\/", "/[^/]*/")
-                        .replaceAll("\\/\\{[^/]*\\}", "/?([^/])*");//change to make match any.
-                //+ "\\/\\w*";//add end matcher //no need to add and matcher the id should be in url
+                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
+                String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
+                        .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
                 if (requestUrl.matches(restCommandPattern)) {
                     Object commandProcessor = getObject(clazz);
                     if (annotation.isSingleton()) {
@@ -338,7 +343,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     private String removeLustIdParameter(String resourceFromAnnotation) {
         String resourceWithoutLustIdParameter = resourceFromAnnotation;//отбрасываем последний парметр в урле
-        int lastIndex = resourceWithoutLustIdParameter.lastIndexOf("/");
+        int lastIndex = resourceWithoutLustIdParameter.lastIndexOf(URL_STEP_DELIMITER);
         if (lastIndex != -1) {
             resourceWithoutLustIdParameter = resourceFromAnnotation.substring(0, lastIndex);
         }
@@ -348,7 +353,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private List<RestUrlVariableInfo> getRestUrlVariableInfos(String[] urlSteps) {
         List<RestUrlVariableInfo> restUrlVariableInfos = new ArrayList<>();
         for (int j = 0; j < urlSteps.length; j++) {
-            if (urlSteps[j].matches("\\{[^/]*\\}")) {
+            if (urlSteps[j].matches(REST_URL_VARIABLE_REGEX)) {
                 restUrlVariableInfos.add(new RestUrlVariableInfo(j, urlSteps[j].substring(1, urlSteps[j].length() - 1)));
             }
         }
