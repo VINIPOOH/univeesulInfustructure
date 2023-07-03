@@ -21,6 +21,7 @@ import infrastructure.factory.ObjectFactory;
 import infrastructure.factory.ObjectFactoryImpl;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.http.controller.PhantomController;
+import infrastructure.rest.Rest404Controller;
 import infrastructure.soket.web_socket.ClientWebSocketHandler;
 import infrastructure.soket.web_socket.controller.AbstractTcpController;
 import infrastructure.soket.web_socket.controller.TcpController;
@@ -329,7 +330,10 @@ public class ApplicationContextImpl implements ApplicationContext {
                 }
             }
         }
-        return null;//(MultipleMethodController) getObject(defaultEndpoint); todo сделать дефолтный обработчки 404 на случай если не нашелся подходящий мапинг
+        return RestUrlCommandProcessorInfo.builder().commandProcessor(new Rest404Controller())
+                .processorsMethod(getConfig().getMethodAnnotatedWith(
+                        Rest404Controller.class, RestGetAll.class))
+                .build();
     }
 
     private String removeLustIdParameter(String resourceFromAnnotation) {
