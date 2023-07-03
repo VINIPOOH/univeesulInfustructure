@@ -65,7 +65,7 @@ public class IdentityCommunicationSessionServiceImpl implements IdentityCommunic
                 .forEach(integer -> {
                     String sessionId = userIdToSessionIdMap.get(integer);
                     ConnectionNotificationSubscriber connectionNotificationSubscriber = sessionIdToConnectionHandlerMap.get(sessionId);
-                    connectionNotificationSubscriber.processMessage(message);
+                    new Thread(new SendNotificationMessage(connectionNotificationSubscriber, message)).start();
                 });
     }
 
