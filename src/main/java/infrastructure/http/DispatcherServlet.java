@@ -1,15 +1,14 @@
 package infrastructure.http;
 
+import com.google.gson.Gson;
 import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
 import infrastructure.RestUrlCommandProcessorInfo;
 import infrastructure.http.controller.MultipleMethodController;
 import infrastructure.util.RestUrlUtilService;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -18,9 +17,10 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import com.google.gson.Gson;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
 
@@ -33,6 +33,9 @@ public class DispatcherServlet extends GenericServlet {
     public static final String JSON_RESPONSE = "json-response:";
     private static final Logger log = LogManager.getLogger(DispatcherServlet.class);
     private static final RestUrlUtilService REST_URL_UTIL_SERVICE = new RestUrlUtilService();
+    public static final String INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX = "infrastructure.application.rest.url.prefix";
+    public static final String INFRASTRUCTURE_APPLICATION_URL_BASE_PATH = "infrastructure.application.url.base.path";
+    public static final String INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX = "infrastructure.application.url.redirect.prefix";
 
     ApplicationContext context;
 
@@ -57,8 +60,9 @@ public class DispatcherServlet extends GenericServlet {
     public void service(ServletRequest servletRequest, ServletResponse servletResponse) throws ServletException, IOException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
-        String logicUrlPath = request.getRequestURI().replaceFirst(".*/delivery/", "");//todo property
-        if (logicUrlPath.startsWith("/rest/")) {//todo property
+        String logicUrlPath = request.getRequestURI().replaceFirst(
+                ".*" + context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), "");
+        if (logicUrlPath.startsWith(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX))) {
             passOver(request, response, processRestRequest(logicUrlPath, request, response));
         } else {
             processGeneralHttpRequest((HttpServletResponse) servletResponse, request);
@@ -84,7 +88,7 @@ public class DispatcherServlet extends GenericServlet {
 
     private String processRestRequest(String logicUrlPath, HttpServletRequest request,
                                       HttpServletResponse response) {
-        logicUrlPath = logicUrlPath.replaceFirst("/rest", "");
+        logicUrlPath = logicUrlPath.replaceFirst(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX), "");
         RestUrlCommandProcessorInfo restCommandProcessorInfo = ApplicationContextImpl.getContext().getRestCommand(logicUrlPath, request.getMethod());
 
         Object[] parametersToPassInInvocation = populateMethodParametersValues(logicUrlPath, request, response, restCommandProcessorInfo);
@@ -155,12 +159,13 @@ public class DispatcherServlet extends GenericServlet {
 
     private MultipleMethodController getMultipleMethodCommand(HttpServletRequest request) {
         return ApplicationContextImpl.getContext()
-                .getHttpCommand(request.getRequestURI().replaceFirst(".*/delivery/", ""));//todo generify this delivery in some property
+                .getHttpCommand(request.getRequestURI().replaceFirst
+                        (".*" + context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), ""));
     }
 
     private void passOver(HttpServletRequest request, HttpServletResponse response, String page) throws IOException, ServletException {
-        if (page.contains("redirect:")) {
-            response.sendRedirect(page.replace("redirect:", "")); //todo property
+        if (page.contains(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX))) {
+            response.sendRedirect(page.replace(context.getApplicationConfigurationBundle().getString(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX), ""));
         } else if (page.startsWith(JSON_RESPONSE)) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
