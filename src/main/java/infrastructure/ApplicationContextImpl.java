@@ -121,11 +121,9 @@ public class ApplicationContextImpl implements ApplicationContext {
         initTcpEndpoints();
 
 
-        for (Class<?> clazz : config.getImplClasses(Runnable.class)) {
-            if (Arrays.stream(clazz.getAnnotations()).anyMatch(annotation -> annotation instanceof DemonThread)) {
-                final Runnable runnable = (Runnable) getObject(clazz);
-                new Thread(runnable).start();
-            }
+        for (Class<?> clazz : config.getTypesAnnotatedWith(DemonThread.class)) {
+            final Runnable runnable = (Runnable) getObject(clazz);
+            new Thread(runnable).start();
         }
 
     }
