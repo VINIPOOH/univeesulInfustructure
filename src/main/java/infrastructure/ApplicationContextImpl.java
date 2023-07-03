@@ -29,7 +29,6 @@ import lombok.SneakyThrows;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.net.URI;
@@ -60,7 +59,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, Class> messageTypeToMessageClass;
     private final Map<Class, String> massageClassToCode;
     private final Class defaultEndpoint = PhantomController.class;
-    private final Config config;
+    private Config config;
     private ObjectFactory factory;
     private final ResourceBundle applicationConfigurationBundle = ResourceBundle.getBundle("application");
 
@@ -71,7 +70,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             synchronized (ApplicationContext.class) {
                 if (singleToneApplicationContext == null) {
                     Map<Class, Object> paramMap = new ConcurrentHashMap<>();
-                    ApplicationContext context = new ApplicationContextImpl(new JavaConfig(""), paramMap,
+                    ApplicationContext context = new ApplicationContextImpl(paramMap,
                             new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
                     ObjectFactory objectFactory = new ObjectFactoryImpl(context);
                     context.setFactory(objectFactory);
@@ -92,7 +91,7 @@ public class ApplicationContextImpl implements ApplicationContext {
      * @param messageTypeToMessageClass
      * @param massageClassToCode
      */
-    private ApplicationContextImpl(Config config, Map<Class, Object> preparedCash,
+    private ApplicationContextImpl(Map<Class, Object> preparedCash,
                                    Map<String, MultipleMethodController> controllersPrepared,
                                    CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
@@ -101,7 +100,6 @@ public class ApplicationContextImpl implements ApplicationContext {
         log.debug("");
 
         this.controllerMap = controllersPrepared;
-        this.config = config;
         this.objectsCash = preparedCash;
         currencies = currencyInfoLoader.getCurrencyInfo();
         urlMatchPatternToCommandProcessorInfo = new HashMap<>();
@@ -121,7 +119,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         initTcpEndpoints();
 
 
-        for (Class<?> clazz : config.getTypesAnnotatedWith(DemonThread.class)) {
+        for (Class<?> clazz : getConfig().getTypesAnnotatedWith(DemonThread.class)) {
             final Runnable runnable = (Runnable) getObject(clazz);
             new Thread(runnable).start();
         }
@@ -132,7 +130,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.tcp.controllers"))){
             return;
         }
-        for (Class<?> clazz : config.getSubTypesOf(AbstractTcpController.class)) {
+        for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
             ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
             Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
             TcpController toReturn = (TcpController) getObject(clazz);
@@ -147,7 +145,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.rest.controllers"))){
             return;
         }
-        for (Class<?> clazz : config.getTypesAnnotatedWith(RestEndpoint.class)) {
+        for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
             if (annotation.isSingleton() && !annotation.isSingletonLazy()){
                 for (String resourceFromAnnotation : annotation.resource()) {
@@ -168,7 +166,7 @@ public class ApplicationContextImpl implements ApplicationContext {
 
     private void initHttpControllers() {
         if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.http.controllers"))) {
-            for (Class<?> clazz : config.getTypesAnnotatedWith(HttpEndpoint.class)) {
+            for (Class<?> clazz : getConfig().getTypesAnnotatedWith(HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 if (annotation.isSingleton() && !annotation.isSingletonLazy()) {
                     MultipleMethodController toReturn = (MultipleMethodController) getObject(clazz);
@@ -179,7 +177,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
     private void initNetworkDto() {
         if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.network.dto"))) {
-            for (Class<?> clazz : config.getTypesAnnotatedWith(NetworkDto.class)) {
+            for (Class<?> clazz : getConfig().getTypesAnnotatedWith(NetworkDto.class)) {
                 NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
                 messageTypeToMessageClass.put(annotation.massageCode(), clazz);
                 massageClassToCode.put(clazz, annotation.massageCode());
@@ -188,7 +186,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
     private void initSingletonAnnotatedObjects() {
         if (Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.singleton"))) {
-            for (Class<?> clazz : config.getTypesAnnotatedWith(Singleton.class)) {
+            for (Class<?> clazz : getConfig().getTypesAnnotatedWith(Singleton.class)) {
                 Singleton annotation = clazz.getAnnotation(Singleton.class);
                 if (!annotation.isLazy()) {
                     log.debug("created" + clazz.getName());
@@ -233,7 +231,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             Class<? extends T> implClass = typeKey;
 
             if (typeKey.isInterface()) {
-                implClass = config.getImplClass(typeKey);
+                implClass = getConfig().getImplClass(typeKey);
             }
             T toReturn;
             try {
@@ -256,7 +254,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (controllerMap.containsKey(linkKey)) {
                 return controllerMap.get(linkKey);
             }
-            for (Class<?> clazz : config.getTypesAnnotatedWith(
+            for (Class<?> clazz : getConfig().getTypesAnnotatedWith(
                     HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 for (String i : annotation.value()) {
@@ -302,7 +300,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private RestUrlCommandProcessorInfo getNotCashedYetRestUrlCommandProcessorInfo(String requestUrl, String requestMethod) {
-        for (Class<?> clazz : config.getTypesAnnotatedWith(RestEndpoint.class)) {
+        for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
             for (String resourceFromAnnotation : annotation.resource()) {
                 String[] urlSteps = resourceFromAnnotation.split("\\/");
@@ -320,7 +318,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                             .commandProcessor(commandProcessor)
                             .restUrlVariableInfos(getRestUrlVariableInfos(urlSteps))
                             .processorsMethod(
-                                    config.getMethodAnnotatedWith(
+                                    getConfig().getMethodAnnotatedWith(
                                             clazz, RestUrlUtilService.getRestMethodAnnotation(requestUrl, requestMethod, resourceWithoutLustIdParameterRegex))
                             ).build();
                 }
@@ -352,11 +350,11 @@ public class ApplicationContextImpl implements ApplicationContext {
         RestProcessorMethodsInfo restUrlCommandProcessorInfo = new RestProcessorMethodsInfo();
         restUrlCommandProcessorInfo.setCommandProcessor(commandProcessor);
         restUrlCommandProcessorInfo.setPureEndingOfResource(pureEndingOfResource);
-        restUrlCommandProcessorInfo.setGetByIdMethod(config.getMethodAnnotatedWith(clazz, RestGetById.class));
-        restUrlCommandProcessorInfo.setGetAllMethod(config.getMethodAnnotatedWith(clazz, RestGetAll.class));
-        restUrlCommandProcessorInfo.setUpdateMethod(config.getMethodAnnotatedWith(clazz, RestUpdate.class));
-        restUrlCommandProcessorInfo.setPutMethod(config.getMethodAnnotatedWith(clazz, RestPut.class));
-        restUrlCommandProcessorInfo.setDeleteMethod(config.getMethodAnnotatedWith(clazz, RestDelete.class));
+        restUrlCommandProcessorInfo.setGetByIdMethod(getConfig().getMethodAnnotatedWith(clazz, RestGetById.class));
+        restUrlCommandProcessorInfo.setGetAllMethod(getConfig().getMethodAnnotatedWith(clazz, RestGetAll.class));
+        restUrlCommandProcessorInfo.setUpdateMethod(getConfig().getMethodAnnotatedWith(clazz, RestUpdate.class));
+        restUrlCommandProcessorInfo.setPutMethod(getConfig().getMethodAnnotatedWith(clazz, RestPut.class));
+        restUrlCommandProcessorInfo.setDeleteMethod(getConfig().getMethodAnnotatedWith(clazz, RestDelete.class));
         restUrlCommandProcessorInfo.setRestUrlVariableInfos(getRestUrlVariableInfos(urlSteps));
         urlMatchPatternToCommandProcessorInfo.put(resourceUrlPattern, restUrlCommandProcessorInfo);
     }
@@ -374,7 +372,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
                 return messageTypeTcpCommandControllerMap.get(requestMessageType);
             }
-            for (Class<?> clazz : config.getSubTypesOf(AbstractTcpController.class)) {
+            for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
                 ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
                 Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
                 if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
@@ -397,7 +395,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             synchronized (messageTypeToMessageClass) {
                 messageClass = messageTypeToMessageClass.get(messageCode);
                 if (messageClass == null) {
-                    messageClass = config.getTypesAnnotatedWith(NetworkDto.class).stream()
+                    messageClass = getConfig().getTypesAnnotatedWith(NetworkDto.class).stream()
                             .filter(clazz -> clazz.getAnnotation(NetworkDto.class).massageCode().equals(messageCode))
                             .findFirst()
                             .get();//todo добавить дефолтний 404 ендпоинт
@@ -436,6 +434,13 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     public Config getConfig() {
+        if (this.config == null) {
+            synchronized (this) {
+                if (this.config == null) {
+                    this.config = new JavaConfig(applicationConfigurationBundle.getString("infrastructure.package.to.annotation.scan"));
+                }
+            }
+        }
         return this.config;
     }
 
