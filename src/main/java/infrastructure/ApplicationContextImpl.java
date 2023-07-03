@@ -117,13 +117,18 @@ public class ApplicationContextImpl implements ApplicationContext {
         initHttpControllers();
         initRestControllers();
         initTcpEndpoints();
+        startDemonThreads();
 
+    }
 
+    private void startDemonThreads() {
+        if (!Boolean.parseBoolean(applicationConfigurationBundle.getString("infrastructure.include.in.start.demon.threads"))){
+            return;
+        }
         for (Class<?> clazz : getConfig().getTypesAnnotatedWith(DemonThread.class)) {
             final Runnable runnable = (Runnable) getObject(clazz);
             new Thread(runnable).start();
         }
-
     }
 
     private void initTcpEndpoints() {
