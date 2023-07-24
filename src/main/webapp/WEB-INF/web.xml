@@ -1,19 +1,23 @@
 <web-app version="3.0">
   <display-name>Archetype Created Web Application</display-name>
   <servlet>
-    <servlet-name>Servlet</servlet-name>
-    <servlet-class>infrastructure.http.DispatcherServlet</servlet-class>
+    <servlet-name>PureHttpDispatcherServlet</servlet-name>
+    <servlet-class>infrastructure.http.PureHttpDispatcherServlet</servlet-class>
+  </servlet>
+
+  <servlet>
+    <servlet-name>RestDispatcherServlet</servlet-name>
+    <servlet-class>infrastructure.rest.RestDispatcherServlet</servlet-class>
   </servlet>
 
   <servlet-mapping>
-    <servlet-name>Servlet</servlet-name>
-    <url-pattern>/userHttp/*</url-pattern>
-    <url-pattern>/user/*</url-pattern>
-    <url-pattern>/admin/*</url-pattern>
-    <url-pattern>/404</url-pattern>
-    <url-pattern>/counter/*</url-pattern>
+    <servlet-name>PureHttpDispatcherServlet</servlet-name>
+    <url-pattern>/http/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>RestDispatcherServlet</servlet-name>
     <url-pattern>/rest/*</url-pattern>
-    <url-pattern>/get/localitiesGet/by/localitySend/id/*</url-pattern>
   </servlet-mapping>
 
 

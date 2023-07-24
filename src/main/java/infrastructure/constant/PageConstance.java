@@ -25,7 +25,7 @@ public interface PageConstance {
 String INPUT_GIRVNAS_NOT_RATE = "input_grivnasnotrate";
 
     String LOGIN_REQUEST_COMMAND = "login";
-    String ERROR_404_COMMAND = "404";
+    String ERROR_404_COMMAND = "/404.jsp";
     String USER_PROFILE_REQUEST_COMMAND = "user/user-profile";
 
     String REDIRECT_ON_ERROR_404_STRAIGHT = "/delivery/404";

@@ -24,7 +24,7 @@ public class PhantomController implements MultipleMethodController {
     public String doGet(HttpServletRequest request) {
         log.debug("");
 
-        return REDIRECT_COMMAND + ERROR_404_COMMAND;
+        return ERROR_404_COMMAND;
     }
 
     @Override

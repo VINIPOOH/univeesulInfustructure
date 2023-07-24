@@ -13,7 +13,7 @@
 </head>
 <body>
 <form id="getUserById" class="form" method="post"
-      action="${pageContext.request.contextPath}/userHttp">
+      action="${pageContext.request.contextPath}/http/userHttp">
     <input type="hidden" name="_method" value="get"/>
         <td>
             <input name="user_id" placeholder="user_id"/>
@@ -26,7 +26,7 @@
     </tr>
 </form>
 <form id="getUserById" class="form" method="get"
-      action="${pageContext.request.contextPath}/userHttp">
+      action="${pageContext.request.contextPath}/http/userHttp">
     <input type="hidden" name="_method" value="get"/>
     <td>
         <input name="user_id" placeholder="user_id"/>
@@ -39,7 +39,7 @@
     </tr>
 </form>
 <form id="updateUser" class="form" method="post"
-      action="${pageContext.request.contextPath}/userHttp">
+      action="${pageContext.request.contextPath}/http/userHttp">
     <input type="hidden" name="_method" value="post"/>
     <td>
         <input name="user_id" placeholder="user_id"/>
@@ -53,7 +53,7 @@
     </tr>
 </form>
 <form id="createUSER" class="form" method="post"
-      action="${pageContext.request.contextPath}/userHttp">
+      action="${pageContext.request.contextPath}/http/userHttp">
     <input type="hidden" name="_method" value="put"/>
     <td>
         <input name="user_id" placeholder="user_id"/>
@@ -66,7 +66,7 @@
     </tr>
 </form>
 <form id="delete uesr" class="form" method="post"
-      action="${pageContext.request.contextPath}/userHttp">
+      action="${pageContext.request.contextPath}/http/userHttp">
     <input type="hidden" name="_method" value="delete"/>
     <td>
         <input name="user_id" placeholder="user_id"/>

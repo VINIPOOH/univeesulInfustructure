@@ -8,7 +8,7 @@ import testingFunctional.crud.services.UserService;
 
 import javax.servlet.http.HttpServletRequest;
 
-@HttpEndpoint(value = "/userHttp")
+@HttpEndpoint(value = "/http/userHttp")
 @NeedConfig
 public class UserHttpController implements MultipleMethodController {
 
@@ -32,19 +32,19 @@ public class UserHttpController implements MultipleMethodController {
     @Override
     public String doPut(HttpServletRequest request) {
         request.setAttribute(USER_ID, userService.createUser(Integer.parseInt(request.getParameter(USER_ID))));
-        return "redirect:/userHttp";
+        return "redirect:/http/userHttp";
     }
 
     @Override
     public String doPost(HttpServletRequest request) {
         request.setAttribute(USER_ID, userService.updateUserName
                 (Integer.parseInt(request.getParameter(USER_ID)), request.getParameter(USER_NAME)));
-        return "redirect:/jsptest/userinfo.jsp";
+        return "redirect:/http/userHttp";
     }
 
     @Override
     public String doDelete(HttpServletRequest request) {
         request.setAttribute(USER_ID, userService.deleteUserById(Integer.parseInt(request.getParameter(USER_ID))));
-        return "redirect:/userHttp";
+        return "redirect:/http/userHttp";
     }
 }
