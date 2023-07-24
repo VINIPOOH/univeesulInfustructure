@@ -2,12 +2,12 @@
   <display-name>Archetype Created Web Application</display-name>
   <servlet>
     <servlet-name>PureHttpDispatcherServlet</servlet-name>
-    <servlet-class>infrastructure.http.PureHttpDispatcherServlet</servlet-class>
+    <servlet-class>infrastructure.http.PureHttpFrontController</servlet-class>
   </servlet>
 
   <servlet>
     <servlet-name>RestDispatcherServlet</servlet-name>
-    <servlet-class>infrastructure.rest.RestDispatcherServlet</servlet-class>
+    <servlet-class>infrastructure.rest.RestDispatcherFrontController</servlet-class>
   </servlet>
 
   <servlet-mapping>

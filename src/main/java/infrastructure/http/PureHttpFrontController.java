@@ -1,37 +1,25 @@
 package infrastructure.http;
 
-import com.google.gson.Gson;
-import infrastructure.ApplicationContext;
 import infrastructure.ApplicationContextImpl;
-import infrastructure.DispatcherServlet;
-import infrastructure.RestUrlCommandProcessorInfo;
+import infrastructure.FrontController;
 import infrastructure.http.controller.MultipleMethodController;
-import infrastructure.util.RestUrlUtilService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import javax.servlet.GenericServlet;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.ConcurrentHashMap;
-
-import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
 
 /**
  * @author Vendelovskyi Ivan
  * @version 1.0
  */
-public class PureHttpDispatcherServlet extends DispatcherServlet {
+public class PureHttpFrontController extends FrontController {
 
-    private static final Logger log = LogManager.getLogger(PureHttpDispatcherServlet.class);
+    private static final Logger log = LogManager.getLogger(PureHttpFrontController.class);
     private static final String INFRASTRUCTURE_APPLICATION_URL_BASE_PATH = "infrastructure.application.url.base.path";
 
     @Override

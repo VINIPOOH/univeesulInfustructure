@@ -1,22 +1,16 @@
 package infrastructure;
 
-import com.google.gson.Gson;
-import infrastructure.http.controller.MultipleMethodController;
-import infrastructure.util.RestUrlUtilService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
@@ -25,9 +19,9 @@ import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
  * @author Vendelovskyi Ivan
  * @version 1.0
  */
-public abstract class DispatcherServlet extends GenericServlet {
+public abstract class FrontController extends GenericServlet {
 
-    private static final Logger log = LogManager.getLogger(DispatcherServlet.class);
+    private static final Logger log = LogManager.getLogger(FrontController.class);
     protected ApplicationContext context;
     protected static final String JSON_RESPONSE = "json-response:"; //todo move to the properties
     private static final String INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX = "infrastructure.application.url.redirect.prefix";
