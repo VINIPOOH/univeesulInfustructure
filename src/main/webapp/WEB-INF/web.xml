@@ -7,7 +7,7 @@
 
   <servlet>
     <servlet-name>RestDispatcherServlet</servlet-name>
-    <servlet-class>infrastructure.rest.RestDispatcherFrontController</servlet-class>
+    <servlet-class>infrastructure.rest.RestFrontController</servlet-class>
   </servlet>
 
   <servlet-mapping>

@@ -21,14 +21,14 @@ import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 
 @ServerEndpoint(value = "/socket", decoders = MassageDecoder.class, encoders = MassageEncoder.class)
-public class ServerWebSocketHandler implements ConnectionNotificationSubscriber {
+public class WebSocketFrontController implements ConnectionNotificationSubscriber {
     private ApplicationContext applicationContext;
     private IdentityCommunicationSessionService identityCommunicationSessionService;
     private Session session;
 
-    public ServerWebSocketHandler() {
+    public WebSocketFrontController() {
         applicationContext = ApplicationContextImpl.getContext();
-        applicationContext.addObject(ServerWebSocketHandler.class, this);
+        applicationContext.addObject(WebSocketFrontController.class, this);
         identityCommunicationSessionService = applicationContext.getObject(IdentityCommunicationSessionService.class);
     }
 

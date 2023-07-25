@@ -23,7 +23,7 @@ public class ClientWebSocketHandler {//с етип пока не понятно 
 
     public ClientWebSocketHandler(URI endpointURI) {
         applicationContext = ApplicationContextImpl.getContext();
-        applicationContext.addObject(ServerWebSocketHandler.class, this);
+        applicationContext.addObject(WebSocketFrontController.class, this);
         identityCommunicationSessionService = applicationContext.getObject(IdentityCommunicationSessionService.class);
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();

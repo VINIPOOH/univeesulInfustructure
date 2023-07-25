@@ -20,9 +20,9 @@ import java.lang.reflect.InvocationTargetException;
  * @author Vendelovskyi Ivan
  * @version 1.0
  */
-public class RestDispatcherFrontController extends FrontController {
+public class RestFrontController extends FrontController {
 
-    private static final Logger log = LogManager.getLogger(RestDispatcherFrontController.class);
+    private static final Logger log = LogManager.getLogger(RestFrontController.class);
     private static final RestUrlUtilService REST_URL_UTIL_SERVICE = new RestUrlUtilService();
     private static final String INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX = "infrastructure.application.rest.url.prefix";
     private static final String INFRASTRUCTURE_APPLICATION_URL_BASE_PATH = "infrastructure.application.url.base.path";
