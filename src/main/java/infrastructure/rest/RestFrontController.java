@@ -22,7 +22,6 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class RestFrontController extends FrontController {
 
-    private static final Logger log = LogManager.getLogger(RestFrontController.class);
     private static final RestUrlUtilService REST_URL_UTIL_SERVICE = new RestUrlUtilService();
     private static final String INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX = "infrastructure.application.rest.url.prefix";
     private static final String INFRASTRUCTURE_APPLICATION_URL_BASE_PATH = "infrastructure.application.url.base.path";
@@ -39,13 +38,13 @@ public class RestFrontController extends FrontController {
     private String processRestRequest(String logicUrlPath, HttpServletRequest request,
                                       HttpServletResponse response) {
         logicUrlPath = logicUrlPath.replaceFirst(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX), "");
-        RestUrlCommandProcessorInfo restCommandProcessorInfo = ApplicationContextImpl.getContext().getRestCommand(logicUrlPath, request.getMethod());
+        RestUrlCommandProcessorInfo restCommandProcessorInfo = context.getRestCommand(logicUrlPath, getMethodCode(request));
 
         Object[] parametersToPassInInvocation = populateMethodParametersValues(logicUrlPath, request, response, restCommandProcessorInfo);
 
         try {
             Object invoke = restCommandProcessorInfo.getProcessorsMethod().invoke(restCommandProcessorInfo.getCommandProcessor(), parametersToPassInInvocation);
-            return JSON_RESPONSE + new Gson().toJson(invoke);
+            return context.getPropertyValue(JSON_RESPONSE_KEY) + new Gson().toJson(invoke);
         } catch (IllegalAccessException | InvocationTargetException e) {
             e.printStackTrace();
             return "null";

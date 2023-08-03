@@ -69,7 +69,11 @@ public class JavaConfig implements Config {
 
     @Override
     public Method getMethodAnnotatedWith(Class<?> type, Class<? extends Annotation> annotation) {
-        return getMethodsAnnotatedWith(type, annotation).get(0);
+        List<Method> methodsAnnotatedWith = getMethodsAnnotatedWith(type, annotation);
+        if (methodsAnnotatedWith.size()==0){
+            return null;
+        }
+        return methodsAnnotatedWith.get(0);
     }
 }
 

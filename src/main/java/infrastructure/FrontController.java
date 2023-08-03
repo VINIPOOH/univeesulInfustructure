@@ -21,10 +21,9 @@ import static infrastructure.constant.AttributeConstants.LOGGED_USER_NAMES;
  */
 public abstract class FrontController extends GenericServlet {
 
-    private static final Logger log = LogManager.getLogger(FrontController.class);
     protected ApplicationContext context;
-    protected static final String JSON_RESPONSE = "json-response:"; //todo move to the properties
-    private static final String INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX = "infrastructure.application.url.redirect.prefix";
+    protected static final String JSON_RESPONSE_KEY = "infrastructure.web.json.response.prefix"; //todo move to the properties
+    private static final String INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX = "infrastructure.web.url.redirect.prefix";
 
     @Override
     public void init() {
@@ -35,22 +34,37 @@ public abstract class FrontController extends GenericServlet {
             System.out.println("Failed to load MySQL JDBC Driver");
             e.printStackTrace();
         }
-        log.debug("initialization started");
         final ServletContext servletContext = getServletContext();
         servletContext.setAttribute(LOGGED_USER_NAMES, new ConcurrentHashMap<String, HttpSession>());
         context = ApplicationContextImpl.getContext();
-        log.debug("start tcp server");
-        log.debug("initialization done");
+    }
+
+
+    protected String getMethodCode(HttpServletRequest request) {
+        if (request.getContentType() != null && request.getContentType().equals("application/x-www-form-urlencoded") && request.getParameter("_method") != null) {
+            switch (request.getParameter("_method")) {
+                case "GET":
+                    return "GET";
+                case "PUT":
+                    return "PUT";
+                case "DELETE":
+                    return "DELETE";
+                case "POST":
+                default:
+                    return "POST";
+            }
+        }
+        return request.getMethod();
     }
 
     protected void passOver(HttpServletRequest request, HttpServletResponse response, String page) throws IOException, ServletException {
         if (page.contains(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX))) {
             response.sendRedirect(page.replace(context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_REDIRECT_PREFIX), ""));
-        } else if (page.startsWith(JSON_RESPONSE)) {
+        } else if (page.startsWith(context.getPropertyValue(JSON_RESPONSE_KEY))) {
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             PrintWriter out = response.getWriter();
-            out.print(page.replaceFirst(JSON_RESPONSE, ""));
+            out.print(page.replaceFirst(context.getPropertyValue(JSON_RESPONSE_KEY), ""));
             out.flush();
         } else {
             request.getRequestDispatcher(page).forward(request, response); //стандартная работа по пробросу на джспеху

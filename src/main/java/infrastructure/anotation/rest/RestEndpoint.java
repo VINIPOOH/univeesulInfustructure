@@ -14,6 +14,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RestEndpoint {
     String[] resource();
-    boolean isSingleton() default true;
-    boolean isSingletonLazy() default false;
 }

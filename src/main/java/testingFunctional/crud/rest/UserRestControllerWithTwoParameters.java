@@ -10,7 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 @NeedConfig
-@RestEndpoint(resource = "/user/{user_id}/book/{bookId}")//in calling program need to be on start /rest todo make this prefix configurable
+@RestEndpoint(resource = "/user/{user_id}/book/{bookId}")
 public class UserRestControllerWithTwoParameters {
 
     @InjectByType

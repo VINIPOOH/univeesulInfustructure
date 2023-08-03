@@ -30,7 +30,7 @@ public class PureHttpFrontController extends FrontController {
     }
 
     private void processGeneralHttpRequest(HttpServletResponse servletResponse, HttpServletRequest request) throws IOException, ServletException {
-        switch (request.getMethod()) {
+        switch (getMethodCode(request)) {
             case "GET":
                 doGet(request, servletResponse);
                 break;
@@ -57,23 +57,6 @@ public class PureHttpFrontController extends FrontController {
     private void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
         log.debug("servlet called with request - " + request.getRequestURI());
-        if (request.getParameter("_method") != null) {
-            switch (request.getParameter("_method")) {
-                case "get":
-                    doGet(request, response);
-                    return;
-                case "put":
-                    doPut(request, response);
-                    return;
-                case "delete":
-                    doDelete(request, response);
-                    return;
-                case "post":
-                default:
-                    passOver(request, response, getMultipleMethodCommand(request).doPost(request));
-                    return;
-            }
-        }
 
         passOver(request, response, getMultipleMethodCommand(request).doPost(request));
     }
@@ -93,7 +76,7 @@ public class PureHttpFrontController extends FrontController {
     }
 
     private MultipleMethodController getMultipleMethodCommand(HttpServletRequest request) {
-        return ApplicationContextImpl.getContext()
+        return context
                 .getHttpCommand(request.getRequestURI().replaceFirst
                         (".*" + context.getPropertyValue(INFRASTRUCTURE_APPLICATION_URL_BASE_PATH), ""));
     }

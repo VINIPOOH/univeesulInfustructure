@@ -61,8 +61,8 @@ public class ApplicationContextImpl implements ApplicationContext {
     public static final String REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX = "\\" + URL_STEP_DELIMITER + REST_URL_VARIABLE_REGEX + "\\" + URL_STEP_DELIMITER;
     public static final String REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX = "\\" + URL_STEP_DELIMITER + REST_URL_VARIABLE_REGEX;
     public static final String REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER = "/?([^/])*";
-    private final Map<Class, Object> objectsCash;
-    private final Map<String, MultipleMethodController> controllerMap;
+    private final Map<Class<?>, Object> objectsCash;
+    private final Map<String, MultipleMethodController> controllerMap;//todo consider refactor this to hold type instead of link to object //todo consider rewrite it to annotation based approach
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
@@ -73,22 +73,19 @@ public class ApplicationContextImpl implements ApplicationContext {
     private ObjectFactory factory;
     private final ResourceBundle applicationConfigurationBundle = ResourceBundle.getBundle("application");
 
-    private static ApplicationContext singleToneApplicationContext;
+    private static final ApplicationContext singleToneApplicationContext;
+
+    static {
+        Map<Class<?>, Object> paramMap = new ConcurrentHashMap<>();
+        ApplicationContext context = new ApplicationContextImpl(paramMap,
+                new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
+        ObjectFactory objectFactory = new ObjectFactoryImpl(context);
+        context.setFactory(objectFactory);
+        context.init();
+        singleToneApplicationContext = context;
+    }
 
     public static ApplicationContext getContext() {
-        if (singleToneApplicationContext == null) {
-            synchronized (ApplicationContext.class) {
-                if (singleToneApplicationContext == null) {
-                    Map<Class, Object> paramMap = new ConcurrentHashMap<>();
-                    ApplicationContext context = new ApplicationContextImpl(paramMap,
-                            new ConcurrentHashMap<>(), new CurrencyInfoFromFileLoader(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new ConcurrentHashMap<>());//todo ivan perhaps we do not need here concurrent hash maps
-                    ObjectFactory objectFactory = new ObjectFactoryImpl(context);
-                    context.setFactory(objectFactory);
-                    context.init();
-                    singleToneApplicationContext = context;
-                }
-            }
-        }
         return singleToneApplicationContext;
     }
 
@@ -101,7 +98,7 @@ public class ApplicationContextImpl implements ApplicationContext {
      * @param messageTypeToMessageClass
      * @param massageClassToCode
      */
-    private ApplicationContextImpl(Map<Class, Object> preparedCash,
+    private ApplicationContextImpl(Map<Class<?>, Object> preparedCash,
                                    Map<String, MultipleMethodController> controllersPrepared,
                                    CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
@@ -167,18 +164,13 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
         for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
-            if (annotation.isSingleton() && !annotation.isSingletonLazy()){
-                for (String resourceFromAnnotation : annotation.resource()) {
-                    String[] urlSteps = resourceFromAnnotation.split(URL_STEP_SPLIT_REGEX);
-                    urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
-                    String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
-                    String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
-                            .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
-                    Object commandProcessor = getObject(clazz);
-                    if (clazz.isAnnotationPresent(Singleton.class)) {
-                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor, urlSteps);
-                    }
-                }
+            for (String resourceFromAnnotation : annotation.resource()) {
+                String[] urlSteps = resourceFromAnnotation.split(URL_STEP_SPLIT_REGEX);
+                urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
+                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
+                String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
+                        .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
+                cashRestCommandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, urlSteps);
             }
         }
     }
@@ -238,8 +230,6 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     public <T> T getObject(Class<T> typeKey) {
-        log.debug("");
-
         if (objectsCash.containsKey(typeKey)) {
             return (T) objectsCash.get(typeKey);
         }
@@ -299,7 +289,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         if (restKey.isPresent()) {
             RestProcessorMethodsInfo restProcessorMethodsInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
             return RestUrlCommandProcessorInfo.builder()
-                    .commandProcessor(restProcessorMethodsInfo.getCommandProcessor())
+                    .commandProcessor(getObject(restProcessorMethodsInfo.getCommandProcessor()))
                     .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(requestUrl, requestMethod, restProcessorMethodsInfo))
                     .restUrlVariableInfos(restProcessorMethodsInfo.getRestUrlVariableInfos())
                     .build();
@@ -309,7 +299,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (restKey.isPresent()) {
                 RestProcessorMethodsInfo restProcessorMethodsInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
                 return RestUrlCommandProcessorInfo.builder()
-                        .commandProcessor(restProcessorMethodsInfo.getCommandProcessor())
+                        .commandProcessor(getObject(restProcessorMethodsInfo.getCommandProcessor()))
                         .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(requestUrl, requestMethod, restProcessorMethodsInfo))
                         .restUrlVariableInfos(restProcessorMethodsInfo.getRestUrlVariableInfos())
                         .build();
@@ -327,13 +317,11 @@ public class ApplicationContextImpl implements ApplicationContext {
                 String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
                 String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
                         .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
+                cashRestCommandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, urlSteps);
                 if (requestUrl.matches(restCommandPattern)) {
-                    Object commandProcessor = getObject(clazz);
-                    if (annotation.isSingleton()) {
-                        cashRestSingeltonComandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, commandProcessor, urlSteps);
-                    }
+
                     return RestUrlCommandProcessorInfo.builder()
-                            .commandProcessor(commandProcessor)
+                            .commandProcessor(getObject(clazz))
                             .restUrlVariableInfos(getRestUrlVariableInfos(urlSteps))
                             .processorsMethod(
                                     getConfig().getMethodAnnotatedWith(
@@ -367,9 +355,9 @@ public class ApplicationContextImpl implements ApplicationContext {
         return restUrlVariableInfos;
     }
 
-    private void cashRestSingeltonComandProcessor(Class<?> clazz, String resourceUrlPattern, String pureEndingOfResource, Object commandProcessor, String[] urlSteps) {
+    private void cashRestCommandProcessor(Class<?> clazz, String resourceUrlPattern, String pureEndingOfResource, String[] urlSteps) {
         RestProcessorMethodsInfo restUrlCommandProcessorInfo = new RestProcessorMethodsInfo();
-        restUrlCommandProcessorInfo.setCommandProcessor(commandProcessor);
+        restUrlCommandProcessorInfo.setCommandProcessor(clazz);
         restUrlCommandProcessorInfo.setPureEndingOfResource(pureEndingOfResource);
         restUrlCommandProcessorInfo.setGetByIdMethod(getConfig().getMethodAnnotatedWith(clazz, RestGetById.class));
         restUrlCommandProcessorInfo.setGetAllMethod(getConfig().getMethodAnnotatedWith(clazz, RestGetAll.class));
