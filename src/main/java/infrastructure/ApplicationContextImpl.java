@@ -4,7 +4,6 @@ import infrastructure.anotation.DemonThread;
 import infrastructure.anotation.HttpEndpoint;
 import infrastructure.anotation.NetworkDto;
 import infrastructure.anotation.Singleton;
-import infrastructure.anotation.TcpEndpoint;
 import infrastructure.anotation.rest.RestDelete;
 import infrastructure.anotation.rest.RestEndpoint;
 import infrastructure.anotation.rest.RestGetAll;
@@ -29,20 +28,23 @@ import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.soket.web_socket.dto.Error404Dto;
 import infrastructure.util.RestUrlUtilService;
 import lombok.SneakyThrows;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 /**
  * Represents info about context in which application run.
@@ -66,8 +68,9 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, Class<?>> messageTypeTcpCommandControllerMap;
-    private final Map<String, Class> messageTypeToMessageClass;
-    private final Map<Class, String> massageClassToCode;
+    private final Map<String, Class<?>> messageTypeToMessageClass;
+    private final Map<Class<?>, String> massageClassToCode;
+    private final Set<Class<?>> processedCalsesSet = Collections.newSetFromMap(new ConcurrentHashMap<>());
     private final Class defaultEndpoint = PhantomController.class;
     private Config config;
     private ObjectFactory factory;
@@ -100,7 +103,7 @@ public class ApplicationContextImpl implements ApplicationContext {
      */
     private ApplicationContextImpl(Map<Class<?>, Object> preparedCash,
                                    Map<String, Class<?>> controllersPrepared,
-                                   CurrencyInfoLoader currencyInfoLoader, Map<String, Class<?>> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
+                                   CurrencyInfoLoader currencyInfoLoader, Map<String, Class<?>> messageTypeTcpCommandControllerMap, Map<String, Class<?>> messageTypeToMessageClass, Map<Class<?>, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
         this.messageTypeToMessageClass = messageTypeToMessageClass;
         this.massageClassToCode = massageClassToCode;
@@ -256,13 +259,16 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (controllerMap.containsKey(linkKey)) {
                 return (MultipleMethodController) getObject(controllerMap.get(linkKey));
             }
-            for (Class<?> clazz : getConfig().getTypesAnnotatedWith(
-                    HttpEndpoint.class)) {
+            Set<Class<?>> typesToLookFor = getConfig().getTypesAnnotatedWith(HttpEndpoint.class).stream()
+                    .filter(type -> !processedCalsesSet.contains(type))
+                    .collect(Collectors.toSet());
+            for (Class<?> clazz : typesToLookFor) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
+                Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, clazz));
+                processedCalsesSet.add(clazz);
                 for (String i : annotation.value()) {
                     if (i.equals(linkKey)) {
                         MultipleMethodController toReturn = (MultipleMethodController) getObject(clazz);
-                        Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, clazz));
                         return toReturn;
                     }
                 }
@@ -300,15 +306,21 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private RestUrlCommandProcessorInfo getNotCashedYetRestUrlCommandProcessorInfo(String requestUrl, String requestMethod) {
-        for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
+        Set<Class<?>> typesToLookFor = getConfig().getTypesAnnotatedWith(RestEndpoint.class).stream()
+                .filter(type -> !processedCalsesSet.contains(type))
+                .collect(Collectors.toSet());
+        for (Class<?> clazz : typesToLookFor) {
             RestEndpoint annotation = clazz.getAnnotation(RestEndpoint.class);
             for (String resourceFromAnnotation : annotation.resource()) {
                 String[] urlSteps = resourceFromAnnotation.split(URL_STEP_SPLIT_REGEX);
                 urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
-                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
-                String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
+                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX,
+                                                                                                                      REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
+                String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX,
+                                                                              REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
                         .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
                 cashRestCommandProcessor(clazz, restCommandPattern, resourceWithoutLustIdParameterRegex, urlSteps);
+                typesToLookFor.add(clazz);
                 if (requestUrl.matches(restCommandPattern)) {
 
                     return RestUrlCommandProcessorInfo.builder()
@@ -372,12 +384,16 @@ public class ApplicationContextImpl implements ApplicationContext {
             if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
                 return (TcpController) getObject(messageTypeTcpCommandControllerMap.get(requestMessageType));
             }
-            for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
+            Set<Class<?>> typesToLookFor = getConfig().getSubTypesOf(AbstractTcpController.class).stream()
+                    .filter(type -> !processedCalsesSet.contains(type))
+                    .collect(Collectors.toSet());
+            for (Class<?> clazz : typesToLookFor) {
                 ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
                 Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
+                messageTypeTcpCommandControllerMap.put(requestMessageType, clazz);
+                processedCalsesSet.add(clazz);
                 if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
                     TcpController toReturn = (TcpController) getObject(clazz);
-                    messageTypeTcpCommandControllerMap.put(requestMessageType, clazz);
                     return toReturn;
                 }
             }
@@ -392,20 +408,23 @@ public class ApplicationContextImpl implements ApplicationContext {
             synchronized (messageTypeToMessageClass) {
                 messageClass = messageTypeToMessageClass.get(messageCode);
                 if (messageClass == null) {
-                    Optional<Class<?>> optionalMessageClass = getConfig().getTypesAnnotatedWith(NetworkDto.class).stream()
-                            .filter(clazz -> clazz.getAnnotation(NetworkDto.class).massageCode().equals(messageCode))
-                            .findFirst();
-                    if (optionalMessageClass.isPresent()){
-                        messageTypeToMessageClass.put(messageCode, optionalMessageClass.get());
-                        massageClassToCode.put(optionalMessageClass.get(), messageCode);
+                    Set<Class<?>> typesToLookFor = getConfig().getTypesAnnotatedWith(NetworkDto.class).stream()
+                            .filter(type -> !processedCalsesSet.contains(type))
+                            .collect(Collectors.toSet());
+                    for (Class<?> clazz : typesToLookFor) {
+                        String massageCodeFromAnnotation = clazz.getAnnotation(NetworkDto.class).massageCode();
+                        messageTypeToMessageClass.put(massageCodeFromAnnotation, clazz);
+                        massageClassToCode.put(clazz, massageCodeFromAnnotation);
+                        processedCalsesSet.add(clazz);
+                        if (messageCode.equals(massageCodeFromAnnotation)) {
+                            return clazz;
+                        }
                     }
-                    else {
-                        messageClass = Error404Dto.class;
-                    }
+                } else {
+                    return Error404Dto.class;
                 }
             }
         }
-
         return messageClass;
     }
 
@@ -419,6 +438,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                     messageCode = messageType.getAnnotation(NetworkDto.class).massageCode();
                     messageTypeToMessageClass.put(messageCode, messageType);
                     massageClassToCode.put(messageType, messageCode);
+                    processedCalsesSet.add(messageType);
                 }
             }
         }
