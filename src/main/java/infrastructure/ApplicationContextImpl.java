@@ -62,7 +62,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     public static final String REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX = "\\" + URL_STEP_DELIMITER + REST_URL_VARIABLE_REGEX;
     public static final String REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER = "/?([^/])*";
     private final Map<Class<?>, Object> objectsCash;
-    private final Map<String, MultipleMethodController> controllerMap;//todo consider refactor this to hold type instead of link to object //todo consider rewrite it to annotation based approach
+    private final Map<String, Class<?>> controllerMap;//todo consider refactor this to hold type instead of link to object //todo consider rewrite it to annotation based approach
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
@@ -99,7 +99,7 @@ public class ApplicationContextImpl implements ApplicationContext {
      * @param massageClassToCode
      */
     private ApplicationContextImpl(Map<Class<?>, Object> preparedCash,
-                                   Map<String, MultipleMethodController> controllersPrepared,
+                                   Map<String, Class<?>> controllersPrepared,
                                    CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
         this.messageTypeToMessageClass = messageTypeToMessageClass;
@@ -179,10 +179,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.http.controllers"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
-                if (annotation.isSingleton() && !annotation.isSingletonLazy()) {
-                    MultipleMethodController toReturn = (MultipleMethodController) getObject(clazz);
-                    Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, toReturn));
-                }
+                Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, clazz));
             }
         }
     }
@@ -257,11 +254,11 @@ public class ApplicationContextImpl implements ApplicationContext {
         log.debug("");
 
         if (controllerMap.containsKey(linkKey)) {
-            return controllerMap.get(linkKey);
+            return (MultipleMethodController) getObject(controllerMap.get(linkKey));
         }
         synchronized (controllerMap) {
             if (controllerMap.containsKey(linkKey)) {
-                return controllerMap.get(linkKey);
+                return (MultipleMethodController) getObject(controllerMap.get(linkKey));
             }
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(
                     HttpEndpoint.class)) {
@@ -269,9 +266,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 for (String i : annotation.value()) {
                     if (i.equals(linkKey)) {
                         MultipleMethodController toReturn = (MultipleMethodController) getObject(clazz);
-                        if (annotation.isSingleton()) {
-                            Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, toReturn));
-                        }
+                        Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, clazz));
                         return toReturn;
                     }
                 }
