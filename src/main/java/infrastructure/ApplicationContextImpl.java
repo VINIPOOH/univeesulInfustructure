@@ -65,7 +65,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     private final Map<String, Class<?>> controllerMap;//todo consider refactor this to hold type instead of link to object //todo consider rewrite it to annotation based approach
     private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
-    private final Map<String, TcpController> messageTypeTcpCommandControllerMap;
+    private final Map<String, Class<?>> messageTypeTcpCommandControllerMap;
     private final Map<String, Class> messageTypeToMessageClass;
     private final Map<Class, String> massageClassToCode;
     private final Class defaultEndpoint = PhantomController.class;
@@ -100,7 +100,7 @@ public class ApplicationContextImpl implements ApplicationContext {
      */
     private ApplicationContextImpl(Map<Class<?>, Object> preparedCash,
                                    Map<String, Class<?>> controllersPrepared,
-                                   CurrencyInfoLoader currencyInfoLoader, Map<String, TcpController> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
+                                   CurrencyInfoLoader currencyInfoLoader, Map<String, Class<?>> messageTypeTcpCommandControllerMap, Map<String, Class> messageTypeToMessageClass, Map<Class, String> massageClassToCode) {
         this.messageTypeTcpCommandControllerMap = messageTypeTcpCommandControllerMap;
         this.messageTypeToMessageClass = messageTypeToMessageClass;
         this.massageClassToCode = massageClassToCode;
@@ -150,11 +150,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
             ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
             Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
-            TcpController toReturn = (TcpController) getObject(clazz);
-            TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
-            if (annotation != null && annotation.isSingleton() && !annotation.isSingletonLazy()){
-                messageTypeTcpCommandControllerMap.put(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode(), toReturn);
-            }
+            messageTypeTcpCommandControllerMap.put(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode(), clazz);
         }
     }
 
@@ -370,21 +366,18 @@ public class ApplicationContextImpl implements ApplicationContext {
     @Override
     public TcpController getTcpCommandController(String requestMessageType) {
         if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
-            return messageTypeTcpCommandControllerMap.get(requestMessageType);
+            return (TcpController) getObject(messageTypeTcpCommandControllerMap.get(requestMessageType));
         }
         synchronized (messageTypeTcpCommandControllerMap) {
             if (messageTypeTcpCommandControllerMap.containsKey(requestMessageType)) {
-                return messageTypeTcpCommandControllerMap.get(requestMessageType);
+                return (TcpController) getObject(messageTypeTcpCommandControllerMap.get(requestMessageType));
             }
             for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
                 ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
                 Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
                 if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
                     TcpController toReturn = (TcpController) getObject(clazz);
-                    TcpEndpoint annotation = clazz.getAnnotation(TcpEndpoint.class);
-                    if (annotation.isSingleton() && annotation.isSingletonLazy()){
-                        messageTypeTcpCommandControllerMap.put(requestMessageType, toReturn);
-                    }
+                    messageTypeTcpCommandControllerMap.put(requestMessageType, clazz);
                     return toReturn;
                 }
             }

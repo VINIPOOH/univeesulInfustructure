@@ -13,6 +13,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(ElementType.TYPE)
 @Retention(RUNTIME)
 public @interface TcpEndpoint {
-    boolean isSingleton() default true;
-    boolean isSingletonLazy() default false;
 }
