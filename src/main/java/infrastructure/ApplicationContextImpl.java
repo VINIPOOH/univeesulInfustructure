@@ -65,7 +65,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     public static final String REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER = "/?([^/])*";
     private final Map<Class<?>, Object> objectsCash;
     private final Map<String, Class<?>> controllerMap;//todo consider refactor this to hold type instead of link to object //todo consider rewrite it to annotation based approach
-    private final Map<String, RestProcessorMethodsInfo> urlMatchPatternToCommandProcessorInfo;
+    private final Map<String, RestProcessorCashInfo> urlMatchPatternToCommandProcessorInfo;
     private final Map<String, CurrencyInfo> currencies;
     private final Map<String, Class<?>> messageTypeTcpCommandControllerMap;
     private final Map<String, Class<?>> messageTypeToMessageClass;
@@ -284,21 +284,21 @@ public class ApplicationContextImpl implements ApplicationContext {
 
         Optional<String> restKey = getRestUrlMatcherKeyToComandProcessor(requestUrl);
         if (restKey.isPresent()) {
-            RestProcessorMethodsInfo restProcessorMethodsInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
+            RestProcessorCashInfo restProcessorCashInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
             return RestUrlCommandProcessorInfo.builder()
-                    .commandProcessor(getObject(restProcessorMethodsInfo.getCommandProcessor()))
-                    .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(requestUrl, requestMethod, restProcessorMethodsInfo))
-                    .restUrlVariableInfos(restProcessorMethodsInfo.getRestUrlVariableInfos())
+                    .commandProcessor(getObject(restProcessorCashInfo.getCommandProcessor()))
+                    .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(requestUrl, requestMethod, restProcessorCashInfo))
+                    .restUrlVariableInfos(restProcessorCashInfo.getRestUrlVariableInfos())
                     .build();
         }
         synchronized (urlMatchPatternToCommandProcessorInfo) {
             restKey = getRestUrlMatcherKeyToComandProcessor(requestUrl);
             if (restKey.isPresent()) {
-                RestProcessorMethodsInfo restProcessorMethodsInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
+                RestProcessorCashInfo restProcessorCashInfo = urlMatchPatternToCommandProcessorInfo.get(restKey.get());
                 return RestUrlCommandProcessorInfo.builder()
-                        .commandProcessor(getObject(restProcessorMethodsInfo.getCommandProcessor()))
-                        .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(requestUrl, requestMethod, restProcessorMethodsInfo))
-                        .restUrlVariableInfos(restProcessorMethodsInfo.getRestUrlVariableInfos())
+                        .commandProcessor(getObject(restProcessorCashInfo.getCommandProcessor()))
+                        .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(requestUrl, requestMethod, restProcessorCashInfo))
+                        .restUrlVariableInfos(restProcessorCashInfo.getRestUrlVariableInfos())
                         .build();
             }
             return getNotCashedYetRestUrlCommandProcessorInfo(requestUrl, requestMethod);
@@ -359,7 +359,7 @@ public class ApplicationContextImpl implements ApplicationContext {
     }
 
     private void cashRestCommandProcessor(Class<?> clazz, String resourceUrlPattern, String pureEndingOfResource, String[] urlSteps) {
-        RestProcessorMethodsInfo restUrlCommandProcessorInfo = new RestProcessorMethodsInfo();
+        RestProcessorCashInfo restUrlCommandProcessorInfo = new RestProcessorCashInfo();
         restUrlCommandProcessorInfo.setCommandProcessor(clazz);
         restUrlCommandProcessorInfo.setPureEndingOfResource(pureEndingOfResource);
         restUrlCommandProcessorInfo.setGetByIdMethod(getConfig().getMethodAnnotatedWith(clazz, RestGetById.class));

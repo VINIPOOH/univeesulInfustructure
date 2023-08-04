@@ -1,7 +1,7 @@
 package infrastructure.util;
 
 import com.google.gson.Gson;
-import infrastructure.RestProcessorMethodsInfo;
+import infrastructure.RestProcessorCashInfo;
 import infrastructure.RestUrlCommandProcessorInfo;
 import infrastructure.RestUrlVariableInfo;
 import infrastructure.anotation.rest.*;
@@ -102,21 +102,21 @@ public class RestUrlUtilService {
         }
     }
 
-    public static Method retrieveMethodForProcessRequest(String requestUrl, String requestMethod, RestProcessorMethodsInfo restProcessorMethodsInfo) {
+    public static Method retrieveMethodForProcessRequest(String requestUrl, String requestMethod, RestProcessorCashInfo restProcessorCashInfo) {
         requestUrl = removeFromStringEndinSleshSimbol(requestUrl);
         switch (requestMethod) {
             case "GET":
-                if (requestUrl.matches(restProcessorMethodsInfo.getPureEndingOfResource())) {
-                    return restProcessorMethodsInfo.getGetAllMethod();
+                if (requestUrl.matches(restProcessorCashInfo.getPureEndingOfResource())) {
+                    return restProcessorCashInfo.getGetAllMethod();
                 } else {
-                    return restProcessorMethodsInfo.getGetByIdMethod();
+                    return restProcessorCashInfo.getGetByIdMethod();
                 }
             case "POST":
-                return restProcessorMethodsInfo.getUpdateMethod();
+                return restProcessorCashInfo.getUpdateMethod();
             case "PUT":
-                return restProcessorMethodsInfo.getPutMethod();
+                return restProcessorCashInfo.getPutMethod();
             case "DELETE":
-                return restProcessorMethodsInfo.getDeleteMethod();
+                return restProcessorCashInfo.getDeleteMethod();
             default:
                 throw new UnsupportedOperationException("there is no method for request " + requestUrl + "with method - " + requestMethod);
         }
