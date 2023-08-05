@@ -102,11 +102,10 @@ public class RestUrlUtilService {
         }
     }
 
-    public static Method retrieveMethodForProcessRequest(String requestUrl, String requestMethod, RestProcessorCashInfo restProcessorCashInfo) {
-        requestUrl = removeFromStringEndinSleshSimbol(requestUrl);
+    public static Method retrieveMethodForProcessRequest(String requestUrlLustStep, String requestMethod, RestProcessorCashInfo restProcessorCashInfo, String resourceKey) {
         switch (requestMethod) {
             case "GET":
-                if (requestUrl.matches(restProcessorCashInfo.getPureEndingOfResource())) {
+                if (resourceKey.endsWith(requestUrlLustStep)) {
                     return restProcessorCashInfo.getGetAllMethod();
                 } else {
                     return restProcessorCashInfo.getGetByIdMethod();
@@ -118,15 +117,14 @@ public class RestUrlUtilService {
             case "DELETE":
                 return restProcessorCashInfo.getDeleteMethod();
             default:
-                throw new UnsupportedOperationException("there is no method for request " + requestUrl + "with method - " + requestMethod);
+                throw new UnsupportedOperationException("there is no method for request " + requestUrlLustStep + "with method - " + requestMethod);
         }
     }
 
-    public static Class<? extends Annotation> getRestMethodAnnotation(String requestUrl, String requestMethod, String pureEndingOfResource) {
-        requestUrl = removeFromStringEndinSleshSimbol(requestUrl);
+    public static Class<? extends Annotation> getRestMethodAnnotation(String requestUrlLustStep, String requestMethod, String resurceKey) {
         switch (requestMethod) {
             case "GET":
-                if (requestUrl.matches(pureEndingOfResource)) {
+                if (resurceKey.endsWith(requestUrlLustStep)) {
                     return RestGetAll.class;
                 } else {
                     return RestGetById.class;
@@ -138,14 +136,7 @@ public class RestUrlUtilService {
             case "DELETE":
                 return RestDelete.class;
             default:
-                throw new UnsupportedOperationException("there is no method for request " + requestUrl + "with method - " + requestMethod);
+                throw new UnsupportedOperationException("there is no method for request " + requestUrlLustStep + "with method - " + requestMethod);
         }
-    }
-
-    private static String removeFromStringEndinSleshSimbol(String linkKey) {
-        if (linkKey.lastIndexOf("/") == linkKey.length() - 1) {
-            linkKey = linkKey.substring(0, linkKey.length() - 1);
-        }
-        return linkKey;
     }
 }

@@ -8,7 +8,6 @@ import java.util.List;
 @Data
 public class RestProcessorCashInfo {
     private List<RestUrlVariableInfo> restUrlVariableInfos;
-    private String pureEndingOfResource;
     private Class<?> commandProcessor;
     private Method getByIdMethod;
     private Method getAllMethod;
