@@ -20,5 +20,15 @@
     <url-pattern>/rest/*</url-pattern>
   </servlet-mapping>
 
+  <filter>
+    <filter-name>XSSFilter</filter-name>
+    <filter-class>infrastructure.http.XSSFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>XSSFilter</filter-name>
+    <url-pattern>/rest/*</url-pattern>
+    <url-pattern>/http/*</url-pattern>
+  </filter-mapping>
+
 
 </web-app>

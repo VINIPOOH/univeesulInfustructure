@@ -1,12 +1,9 @@
 package infrastructure.rest;
 
 import com.google.gson.Gson;
-import infrastructure.ApplicationContextImpl;
 import infrastructure.FrontController;
 import infrastructure.RestUrlCommandProcessorInfo;
-import infrastructure.util.RestUrlUtilService;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import infrastructure.util.RequestUtilService;
 
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -22,7 +19,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class RestFrontController extends FrontController {
 
-    private static final RestUrlUtilService REST_URL_UTIL_SERVICE = new RestUrlUtilService();
+    private static final RequestUtilService REST_URL_UTIL_SERVICE = new RequestUtilService();
     private static final String INFRASTRUCTURE_APPLICATION_REST_URL_PREFIX = "infrastructure.application.rest.url.prefix";
     private static final String INFRASTRUCTURE_APPLICATION_URL_BASE_PATH = "infrastructure.application.url.base.path";
 

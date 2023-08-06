@@ -26,7 +26,7 @@ import infrastructure.soket.web_socket.controller.AbstractTcpController;
 import infrastructure.soket.web_socket.controller.Error404DefaultController;
 import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.soket.web_socket.dto.Error404Dto;
-import infrastructure.util.RestUrlUtilService;
+import infrastructure.util.RequestUtilService;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.InvocationTargetException;
@@ -286,7 +286,7 @@ public class ApplicationContextImpl implements ApplicationContext {
         if (restProcessorCashInfo != null) {
             return RestUrlCommandProcessorInfo.builder()
                     .commandProcessor(getObject(restProcessorCashInfo.getCommandProcessor()))
-                    .processorsMethod(RestUrlUtilService.retrieveMethodForProcessRequest(keyInfoRestRequest.lustUrlStep, requestMethod, restProcessorCashInfo,
+                    .processorsMethod(RequestUtilService.retrieveMethodForProcessRequest(keyInfoRestRequest.lustUrlStep, requestMethod, restProcessorCashInfo,
                                                                                          keyInfoRestRequest.resourceKey))
                     .restUrlVariableInfos(restProcessorCashInfo.getRestUrlVariableInfos())
                     .build();
@@ -298,7 +298,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 return RestUrlCommandProcessorInfo.builder()
                         .commandProcessor(getObject(restProcessorCashInfo.getCommandProcessor()))
                         .processorsMethod(
-                                RestUrlUtilService.retrieveMethodForProcessRequest(keyInfoRestRequest.lustUrlStep, requestMethod, restProcessorCashInfo,
+                                RequestUtilService.retrieveMethodForProcessRequest(keyInfoRestRequest.lustUrlStep, requestMethod, restProcessorCashInfo,
                                                                                    keyInfoRestRequest.resourceKey))
                         .restUrlVariableInfos(restProcessorCashInfo.getRestUrlVariableInfos())
                         .build();
@@ -330,7 +330,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                             .processorsMethod(
                                     getConfig().getMethodAnnotatedWith(
                                             clazz,
-                                            RestUrlUtilService.getRestMethodAnnotation(keyInfoRestRequest.lustUrlStep, requestMethod, restCommandKey))
+                                            RequestUtilService.getRestMethodAnnotation(keyInfoRestRequest.lustUrlStep, requestMethod, restCommandKey))
                             ).build();
                 }
             }

@@ -16,7 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class RestUrlUtilService {
+public class RequestUtilService {
 
     public Object[] createParametersArray(RestUrlCommandProcessorInfo restCommandProcessorInfo) {
         return new Object[restCommandProcessorInfo.getProcessorsMethod().getParameters().length];
