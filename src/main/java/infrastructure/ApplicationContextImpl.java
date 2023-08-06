@@ -28,6 +28,8 @@ import infrastructure.soket.web_socket.controller.TcpController;
 import infrastructure.soket.web_socket.dto.Error404Dto;
 import infrastructure.util.RequestUtilService;
 import lombok.SneakyThrows;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
@@ -42,8 +44,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 
 /**
  * Represents info about context in which application run.
@@ -152,7 +152,12 @@ public class ApplicationContextImpl implements ApplicationContext {
         for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
             ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
             Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
-            messageTypeTcpCommandControllerMap.put(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode(), clazz);
+            String massageCode = actualTypeArgument.getAnnotation(NetworkDto.class).massageCode();
+            messageTypeTcpCommandControllerMap.put(massageCode, clazz);
+            messageTypeToMessageClass.put(massageCode, actualTypeArgument);
+            massageClassToCode.put(actualTypeArgument, massageCode);
+            processedCalsesSet.add(actualTypeArgument);
+            processedCalsesSet.add(clazz);
         }
     }
 
@@ -165,10 +170,10 @@ public class ApplicationContextImpl implements ApplicationContext {
             for (String resourceFromAnnotation : annotation.resource()) {
                 String[] urlSteps = resourceFromAnnotation.split(URL_STEP_SPLIT_REGEX);
                 urlSteps = Arrays.copyOfRange(urlSteps, 1, urlSteps.length);
-                String resourceWithoutLustIdParameterRegex = removeLustIdParameter(resourceFromAnnotation).replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER);
                 String restCommandPattern = resourceFromAnnotation.replaceAll(REST_ENDPOINT_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_VARIABLE_PLACEHOLDER)
                         .replaceAll(REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER_REGEX, REPLACEMENT_REGEX_FOR_REST_ENDPOINT_LUST_VARIABLE_PLACEHOLDER);
                 cashRestCommandProcessor(clazz, restCommandPattern, urlSteps);
+                processedCalsesSet.add(clazz);
             }
         }
     }
@@ -178,6 +183,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, clazz));
+                processedCalsesSet.add(clazz);
             }
         }
     }
@@ -187,6 +193,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
                 messageTypeToMessageClass.put(annotation.massageCode(), clazz);
                 massageClassToCode.put(clazz, annotation.massageCode());
+                processedCalsesSet.add(clazz);
             }
         }
     }
