@@ -21,9 +21,9 @@ public class IdentityCommunicationSessionServiceImpl implements IdentityCommunic
     @InjectByType
     private ApplicationContext applicationContext;
 
-    private final Map<Integer, List<Integer>> userIdToSubscribedUsersIdsMap = new ConcurrentHashMap<>();
-    private final Map<String, ConnectionNotificationSubscriber> sessionIdToConnectionHandlerMap = new ConcurrentHashMap<>();
-    private final Map<Integer, String> userIdToSessionIdMap = new ConcurrentHashMap<>();
+    public final Map<Integer, List<Integer>> userIdToSubscribedUsersIdsMap = new ConcurrentHashMap<>();
+    public final Map<String, ConnectionNotificationSubscriber> sessionIdToConnectionHandlerMap = new ConcurrentHashMap<>();
+    public final Map<Integer, String> userIdToSessionIdMap = new ConcurrentHashMap<>();
 
     @Override
     public void registerNewEmptySession(String sessionId, ConnectionNotificationSubscriber subscriber) {

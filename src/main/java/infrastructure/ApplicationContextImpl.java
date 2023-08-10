@@ -150,14 +150,7 @@ public class ApplicationContextImpl implements ApplicationContext {
             return;
         }
         for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
-            ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
-            Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
-            String massageCode = actualTypeArgument.getAnnotation(NetworkDto.class).massageCode();
-            messageTypeTcpCommandControllerMap.put(massageCode, clazz);
-            messageTypeToMessageClass.put(massageCode, actualTypeArgument);
-            massageClassToCode.put(actualTypeArgument, massageCode);
-            processedCalsesSet.add(actualTypeArgument);
-            processedCalsesSet.add(clazz);
+            cashTcpControllerData(clazz);
         }
     }
 
@@ -412,17 +405,30 @@ public class ApplicationContextImpl implements ApplicationContext {
                     .filter(type -> !processedCalsesSet.contains(type))
                     .collect(Collectors.toSet());
             for (Class<?> clazz : typesToLookFor) {
-                ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
-                Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
-                messageTypeTcpCommandControllerMap.put(requestMessageType, clazz);
-                processedCalsesSet.add(clazz);
-                if (requestMessageType.equals(actualTypeArgument.getAnnotation(NetworkDto.class).massageCode())) {
+                String massageCode = cashTcpControllerData(clazz);
+                if (requestMessageType.equals(massageCode)) {
                     TcpController toReturn = (TcpController) getObject(clazz);
                     return toReturn;
                 }
             }
         }
         return getObject(Error404DefaultController.class);
+    }
+
+    private String cashTcpControllerData(Class<?> clazz) {
+        ParameterizedType genericSuperclass = (ParameterizedType) clazz.getGenericSuperclass();
+        Class<?> actualTypeArgument = (Class<?>) genericSuperclass.getActualTypeArguments()[0];
+        String massageCode = actualTypeArgument.getAnnotation(NetworkDto.class).massageCode();
+        messageTypeTcpCommandControllerMap.put(massageCode, clazz);
+        putTcpMessageToCash(actualTypeArgument, massageCode);
+        processedCalsesSet.add(clazz);
+        return massageCode;
+    }
+
+    private void putTcpMessageToCash(Class<?> actualTypeArgument, String massageCode) {
+        messageTypeToMessageClass.put(massageCode, actualTypeArgument);
+        massageClassToCode.put(actualTypeArgument, massageCode);
+        processedCalsesSet.add(actualTypeArgument);
     }
 
     @Override
@@ -437,9 +443,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                             .collect(Collectors.toSet());
                     for (Class<?> clazz : typesToLookFor) {
                         String massageCodeFromAnnotation = clazz.getAnnotation(NetworkDto.class).massageCode();
-                        messageTypeToMessageClass.put(massageCodeFromAnnotation, clazz);
-                        massageClassToCode.put(clazz, massageCodeFromAnnotation);
-                        processedCalsesSet.add(clazz);
+                        putTcpMessageToCash(clazz, massageCodeFromAnnotation);
                         if (messageCode.equals(massageCodeFromAnnotation)) {
                             return clazz;
                         }
@@ -460,9 +464,7 @@ public class ApplicationContextImpl implements ApplicationContext {
                 messageCode = massageClassToCode.get(messageType);
                 if (messageCode == null) {
                     messageCode = messageType.getAnnotation(NetworkDto.class).massageCode();
-                    messageTypeToMessageClass.put(messageCode, messageType);
-                    massageClassToCode.put(messageType, messageCode);
-                    processedCalsesSet.add(messageType);
+                    putTcpMessageToCash(messageType, messageCode);
                 }
             }
         }

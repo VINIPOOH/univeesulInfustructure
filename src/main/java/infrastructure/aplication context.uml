@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>JAVA</ID>
+  <OriginalElement />
+  <nodes>
+    <node x="947.2279411764705" y="786.0">infrastructure.factory.configurator.obj.InjectStringPropertyAnnotationObjectConfigurator</node>
+    <node x="-264.9013480392157" y="862.5">infrastructure.ApplicationContextImpl</node>
+    <node x="207.0" y="-82.5">infrastructure.config.Config</node>
+    <node x="1351.2279411764707" y="786.0">infrastructure.factory.configurator.obj.InjectByTypeAnnotationObjectConfigurator</node>
+    <node x="615.1666666666666" y="473.0">infrastructure.config.JavaConfig</node>
+    <node x="1069.25" y="682.0">infrastructure.factory.configurator.obj.ObjectConfigurator</node>
+    <node x="670.0" y="-424.0">org.reflections.Reflections</node>
+    <node x="413.0" y="682.0">infrastructure.factory.configurator.proxy.ProxyConfigurator</node>
+    <node x="207.0" y="682.0">infrastructure.factory.ObjectFactory</node>
+    <node x="512.2279411764705" y="786.0">infrastructure.factory.configurator.proxy.TransactionProxyConfigurator</node>
+    <node x="306.2279411764706" y="786.0">infrastructure.factory.ObjectFactoryImpl</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="infrastructure.factory.configurator.proxy.TransactionProxyConfigurator" target="infrastructure.factory.configurator.proxy.ProxyConfigurator" relationship="REALIZATION">
+      <point x="0.0" y="-27.0" />
+      <point x="719.7279411764705" y="766.0" />
+      <point x="724.25" y="766.0" />
+      <point x="103.75" y="27.0" />
+    </edge>
+    <edge source="infrastructure.factory.ObjectFactoryImpl" target="infrastructure.factory.configurator.proxy.ProxyConfigurator" relationship="TO_MANY">
+      <point x="46.5" y="-27.0" />
+      <point x="445.7279411764706" y="766.0" />
+      <point x="557.1323529411765" y="766.0" />
+      <point x="557.1323529411765" y="756.0" />
+      <point x="516.75" y="756.0" />
+      <point x="-103.75" y="27.0" />
+    </edge>
+    <edge source="infrastructure.config.JavaConfig" target="org.reflections.Reflections" relationship="TO_ONE">
+      <point x="147.66666666666666" y="-82.0" />
+      <point x="984.3333333333333" y="448.0" />
+      <point x="1030.75" y="448.0" />
+      <point x="120.25" y="423.5" />
+    </edge>
+    <edge source="infrastructure.factory.ObjectFactoryImpl" target="infrastructure.factory.configurator.obj.ObjectConfigurator" relationship="TO_MANY">
+      <point x="46.5" y="-27.0" />
+      <point x="445.7279411764706" y="766.0" />
+      <point x="557.1323529411765" y="766.0" />
+      <point x="557.1323529411765" y="756.0" />
+      <point x="1147.0" y="756.0" />
+      <point x="-77.75" y="27.0" />
+    </edge>
+    <edge source="infrastructure.factory.ObjectFactoryImpl" target="infrastructure.factory.ObjectFactory" relationship="REALIZATION">
+      <point x="-46.5" y="-27.0" />
+      <point x="352.7279411764706" y="766.0" />
+      <point x="300.0" y="766.0" />
+      <point x="0.0" y="27.0" />
+    </edge>
+    <edge source="infrastructure.config.JavaConfig" target="infrastructure.config.Config" relationship="REALIZATION">
+      <point x="-147.66666666666663" y="-82.0" />
+      <point x="689.0" y="448.0" />
+      <point x="428.5" y="448.0" />
+      <point x="0.0" y="82.0" />
+    </edge>
+    <edge source="infrastructure.factory.configurator.obj.InjectByTypeAnnotationObjectConfigurator" target="infrastructure.factory.configurator.obj.ObjectConfigurator" relationship="REALIZATION">
+      <point x="0.0" y="-27.0" />
+      <point x="1519.2279411764707" y="766.0" />
+      <point x="1305.125" y="766.0" />
+      <point x="1305.125" y="756.0" />
+      <point x="1302.5" y="756.0" />
+      <point x="77.75" y="27.0" />
+    </edge>
+    <edge source="infrastructure.ApplicationContextImpl" target="infrastructure.config.JavaConfig" relationship="CREATE">
+      <point x="-0.0" y="-247.5" />
+      <point x="-24.90134803921569" y="555.0" />
+      <point x="-221.5" y="-0.0" />
+    </edge>
+    <edge source="infrastructure.config.JavaConfig" target="org.reflections.Reflections" relationship="CREATE">
+      <point x="2.8421709430404007E-14" y="-82.0" />
+      <point x="836.6666666666666" y="448.0" />
+      <point x="790.25" y="448.0" />
+      <point x="-120.25" y="423.5" />
+    </edge>
+    <edge source="infrastructure.ApplicationContextImpl" target="infrastructure.config.Config" relationship="TO_ONE">
+      <point x="-15.0" y="-247.5" />
+      <point x="-39.90134803921569" y="-0.5" />
+      <point x="-221.5" y="-0.0" />
+    </edge>
+    <edge source="infrastructure.ApplicationContextImpl" target="infrastructure.factory.ObjectFactory" relationship="TO_ONE">
+      <point x="15.0" y="-247.5" />
+      <point x="-9.90134803921569" y="709.0" />
+      <point x="-93.0" y="-0.0" />
+    </edge>
+    <edge source="infrastructure.ApplicationContextImpl" target="infrastructure.factory.ObjectFactoryImpl" relationship="CREATE">
+      <point x="240.0" y="-0.0" />
+      <point x="399.2279411764706" y="1110.0" />
+      <point x="-0.0" y="27.0" />
+    </edge>
+    <edge source="infrastructure.factory.configurator.obj.InjectStringPropertyAnnotationObjectConfigurator" target="infrastructure.factory.configurator.obj.ObjectConfigurator" relationship="REALIZATION">
+      <point x="0.0" y="-27.0" />
+      <point x="1139.2279411764705" y="766.0" />
+      <point x="1305.125" y="766.0" />
+      <point x="1305.125" y="756.0" />
+      <point x="1302.5" y="756.0" />
+      <point x="77.75" y="27.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic" zoom="0.7904984423676013" showDependencies="true" x="-24.90134803921569" y="1110.0" />
+  <SelectedNodes>
+    <node>infrastructure.ApplicationContextImpl</node>
+  </SelectedNodes>
+  <Categories>
+    <Category>Fields</Category>
+    <Category>Methods</Category>
+  </Categories>
+  <SCOPE>All</SCOPE>
+  <VISIBILITY>public</VISIBILITY>
+</Diagram>
+
