@@ -2,7 +2,7 @@ package infrastructure.dal.conection.pool.impl;
 
 import infrastructure.dal.conection.ConnectionProxy;
 import infrastructure.dal.conection.pool.TransactionalConnectionPool;
-import infrastructure.dal.conection.pool.impl.TransactionalManagerImpl;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -18,10 +18,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class TransactionalManagerImplTest {
+public class ConnectionManagerImplTest {
 
     @InjectMocks
-    TransactionalManagerImpl connectionManager;
+    ConnectionManagerImpl connectionManager;
 
     @Mock
     TransactionalConnectionPool transactionalConnectionPool;

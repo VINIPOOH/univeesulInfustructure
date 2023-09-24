@@ -3,7 +3,7 @@ package infrastructure.dal.conection.dao;
 import infrastructure.anotation.InjectByType;
 import infrastructure.anotation.NeedConfig;
 import infrastructure.dal.conection.ConnectionProxy;
-import infrastructure.dal.conection.pool.TransactionalManager;
+import infrastructure.dal.conection.pool.ConnectionManager;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,7 +24,7 @@ public abstract class JDBCAbstractGenericDao<E> implements AbstractGenericDao<E>
 
     private final ResourceBundle dbRequests = ResourceBundle.getBundle("dbRequests");;
     @InjectByType
-    protected TransactionalManager connector;
+    protected ConnectionManager connector;
 
     public JDBCAbstractGenericDao() {
     }

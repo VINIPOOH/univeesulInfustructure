@@ -1,7 +1,7 @@
 package infrastructure.dal.conection.pool.impl;
 
 import infrastructure.dal.conection.ConnectionProxy;
-import infrastructure.dal.conection.pool.impl.TransactionalConnectionPoolImpl;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,7 +60,7 @@ public class TransactionalConnectionPoolImplTest {
 
         ConnectionProxy result = transactionalConnectionPool.getConnectionAdapter();
 
-        assertEquals(connection, result.getSubject());
+        assertEquals(connection, result.getConnection());
     }
 
     @Test(expected = SQLException.class)
@@ -81,7 +81,7 @@ public class TransactionalConnectionPoolImplTest {
 
         isTransactional.setAccessible(true);
         assertTrue(isTransactional.getBoolean(result));
-        assertEquals(connection, result.getSubject());
+        assertEquals(connection, result.getConnection());
     }
 
     @Test(expected = SQLException.class)

@@ -5,7 +5,7 @@ import infrastructure.anotation.NeedConfig;
 import infrastructure.anotation.Singleton;
 import infrastructure.dal.conection.ConnectionProxy;
 import infrastructure.dal.conection.pool.TransactionalConnectionPool;
-import infrastructure.dal.conection.pool.TransactionalManager;
+import infrastructure.dal.conection.pool.ConnectionManager;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -20,9 +20,9 @@ import java.sql.SQLException;
  */
 @Singleton
 @NeedConfig
-public class TransactionalManagerImpl implements TransactionalManager {
+public class ConnectionManagerImpl implements ConnectionManager {
 
-    private static final Logger log = LogManager.getLogger(TransactionalManagerImpl.class);
+    private static final Logger log = LogManager.getLogger(ConnectionManagerImpl.class);
 
     @InjectByType
     private

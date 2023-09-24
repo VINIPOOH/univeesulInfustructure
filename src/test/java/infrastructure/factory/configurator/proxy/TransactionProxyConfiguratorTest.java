@@ -1,6 +1,6 @@
 package infrastructure.factory.configurator.proxy;
 
-import infrastructure.dal.conection.pool.TransactionalManager;
+import infrastructure.dal.conection.pool.ConnectionManager;
 import infrastructure.ApplicationContext;
 import infrastructure.anotation.Transaction;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class TransactionProxyConfiguratorTest {
     TransactionProxyConfigurator transactionProxyConfigurator;
 
     @Mock
-    TransactionalManager transactionalManager;
+    ConnectionManager connectionManager;
     @Mock
     ApplicationContext applicationContext;
 
@@ -34,16 +34,16 @@ public class TransactionProxyConfiguratorTest {
             }
         }
         TestClass testClass = new TestClass();
-        when(applicationContext.getObject(any(Class.class))).thenReturn(transactionalManager);
+        when(applicationContext.getObject(any(Class.class))).thenReturn(connectionManager);
 
         boolean result = ((TestInterFace) transactionProxyConfigurator.replaceWithProxyIfNeeded(testClass, TestClass.class, applicationContext)).testVoid();
 
 
         verify(applicationContext, times(1)).getObject(any(Class.class));
-        verify(transactionalManager, times(1)).startTransaction();
-        verify(transactionalManager, times(1)).commit();
-        verify(transactionalManager, times(1)).close();
-        verify(transactionalManager, times(0)).rollBack();
+        verify(connectionManager, times(1)).startTransaction();
+        verify(connectionManager, times(1)).commit();
+        verify(connectionManager, times(1)).close();
+        verify(connectionManager, times(0)).rollBack();
         assertTrue(result);
     }
 
@@ -60,10 +60,10 @@ public class TransactionProxyConfiguratorTest {
 
 
         verify(applicationContext, times(0)).getObject(any(Class.class));
-        verify(transactionalManager, times(0)).startTransaction();
-        verify(transactionalManager, times(0)).commit();
-        verify(transactionalManager, times(0)).close();
-        verify(transactionalManager, times(0)).rollBack();
+        verify(connectionManager, times(0)).startTransaction();
+        verify(connectionManager, times(0)).commit();
+        verify(connectionManager, times(0)).close();
+        verify(connectionManager, times(0)).rollBack();
         assertTrue(result);
     }
 
@@ -77,7 +77,7 @@ public class TransactionProxyConfiguratorTest {
             }
         }
         TestClass testClass = new TestClass();
-        when(applicationContext.getObject(any(Class.class))).thenReturn(transactionalManager);
+        when(applicationContext.getObject(any(Class.class))).thenReturn(connectionManager);
 
         ((TestInterFace) transactionProxyConfigurator.replaceWithProxyIfNeeded(testClass, TestClass.class, applicationContext)).testVoid();
 
@@ -94,7 +94,7 @@ public class TransactionProxyConfiguratorTest {
             }
         }
         TestClass testClass = new TestClass();
-        when(applicationContext.getObject(any(Class.class))).thenReturn(transactionalManager);
+        when(applicationContext.getObject(any(Class.class))).thenReturn(connectionManager);
 
         ((TestInterFace) transactionProxyConfigurator.replaceWithProxyIfNeeded(testClass, TestClass.class, applicationContext)).testVoid();
 
@@ -104,16 +104,16 @@ public class TransactionProxyConfiguratorTest {
     @Test
     public void replaceWithProxyIfNeededWhereNoInterfaceAllCorrect() throws Throwable {
         TestClass testClass = new TestClass();
-        when(applicationContext.getObject(any(Class.class))).thenReturn(transactionalManager);
+        when(applicationContext.getObject(any(Class.class))).thenReturn(connectionManager);
 
         boolean result = ((TestClass) transactionProxyConfigurator.replaceWithProxyIfNeeded(testClass, TestClass.class, applicationContext)).testVoid();
 
 
         verify(applicationContext, times(1)).getObject(any(Class.class));
-        verify(transactionalManager, times(1)).startTransaction();
-        verify(transactionalManager, times(1)).commit();
-        verify(transactionalManager, times(1)).close();
-        verify(transactionalManager, times(0)).rollBack();
+        verify(connectionManager, times(1)).startTransaction();
+        verify(connectionManager, times(1)).commit();
+        verify(connectionManager, times(1)).close();
+        verify(connectionManager, times(0)).rollBack();
         assertTrue(result);
     }
 
@@ -124,10 +124,10 @@ public class TransactionProxyConfiguratorTest {
         boolean result = ((TestClass) transactionProxyConfigurator.replaceWithProxyIfNeeded(testClass, TestClass.class, applicationContext)).noTransactionTestVoid();
 
         verify(applicationContext, times(0)).getObject(any(Class.class));
-        verify(transactionalManager, times(0)).startTransaction();
-        verify(transactionalManager, times(0)).commit();
-        verify(transactionalManager, times(0)).close();
-        verify(transactionalManager, times(0)).rollBack();
+        verify(connectionManager, times(0)).startTransaction();
+        verify(connectionManager, times(0)).commit();
+        verify(connectionManager, times(0)).close();
+        verify(connectionManager, times(0)).rollBack();
         assertTrue(result);
     }
 
@@ -143,7 +143,7 @@ public class TransactionProxyConfiguratorTest {
     @Test(expected = Throwable.class)
     public void replaceWithProxyIfNeededWhereNoInterfaceThrowCheckedException() throws Throwable {
         TestClass testClass = new TestClass();
-        when(applicationContext.getObject(any(Class.class))).thenReturn(transactionalManager);
+        when(applicationContext.getObject(any(Class.class))).thenReturn(connectionManager);
 
         ((TestClassWhichThrowCheckedException) transactionProxyConfigurator.replaceWithProxyIfNeeded(testClass, TestClassWhichThrowCheckedException.class, applicationContext)).testVoid();
 

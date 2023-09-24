@@ -37,6 +37,13 @@ public class UserDaoImpl extends JDBCAbstractGenericDao<UserModel> implements Us
         return update(userModel, getDbRequestsString(UPDATE_USER_ID), getModelEntityToPreparedStatementMapper());
     }
 
+    private static EntityToPreparedStatementMapper<UserModel> getModelEntityToPreparedStatementMapper() {
+        return (entity, preparedStatement) -> {
+            preparedStatement.setInt(2, entity.getId());
+            preparedStatement.setString(1, entity.getName());
+        };
+    }
+
     @Override
     public boolean deleteUser(UserModel userModel) {
         return delete(userModel, getDbRequestsString(DELETE_USER_ID), getEntityToPreparedStatementDeleteMapper());
@@ -51,12 +58,7 @@ public class UserDaoImpl extends JDBCAbstractGenericDao<UserModel> implements Us
         return (entity, preparedStatement) -> preparedStatement.setInt(1, entity.getId());
     }
 
-    private static EntityToPreparedStatementMapper<UserModel> getModelEntityToPreparedStatementMapper() {
-        return (entity, preparedStatement) -> {
-            preparedStatement.setInt(2, entity.getId());
-            preparedStatement.setString(1, entity.getName());
-        };
-    }
+
 
     private static EntityToPreparedStatementMapper<UserModel> getUserModelEntityToPreparedStatementCreateMapper() {
         return (entity, preparedStatement) -> preparedStatement.setInt(1, entity.getId());

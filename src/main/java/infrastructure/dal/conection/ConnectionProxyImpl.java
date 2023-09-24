@@ -63,7 +63,7 @@ public class ConnectionProxyImpl implements ConnectionProxy {
     }
 
     @Override
-    public Connection getSubject() {
+    public Connection getConnection() {
         log.debug("getSubject");
 
         return connection;

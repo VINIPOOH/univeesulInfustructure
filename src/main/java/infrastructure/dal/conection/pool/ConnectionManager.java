@@ -11,7 +11,7 @@ import java.sql.SQLException;
  * @author Vendelovskyi Ivan
  * @version 1.0
  */
-public interface TransactionalManager extends AutoCloseable {
+public interface ConnectionManager extends AutoCloseable {
     ConnectionProxy getConnection() throws SQLException;
 
     void startTransaction() throws SQLException;

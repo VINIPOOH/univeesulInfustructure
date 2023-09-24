@@ -2,7 +2,7 @@ package infrastructure.factory.configurator.proxy;
 
 import infrastructure.ApplicationContext;
 import infrastructure.anotation.Transaction;
-import infrastructure.dal.conection.pool.TransactionalManager;
+import infrastructure.dal.conection.pool.ConnectionManager;
 import net.sf.cglib.proxy.Enhancer;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -45,30 +45,30 @@ public class TransactionProxyConfigurator implements ProxyConfigurator {
         log.debug("getInvocationHandlerLogic");
         try {
             if (t.getClass().getMethod(method.getName(), method.getParameterTypes()).isAnnotationPresent(Transaction.class)) {
-                return doTransactionMethodCall(method, args, t, context.getObject(TransactionalManager.class));
+                return doTransactionMethodCall(method, args, t, context.getObject(ConnectionManager.class));
             }
         } catch (NoSuchMethodException | SQLException | InstantiationException ex) {
             log.debug(ex);
         }
         try {
             return method.invoke(t, args);
-        } catch (InvocationTargetException e) {
-            throw e.getCause().getClass().getConstructor().newInstance();
+        } catch (Throwable e) {
+            throw e;
         }
     }
 
-    private Object doTransactionMethodCall(Method method, Object[] args, Object t, TransactionalManager transactionalManager)
+    private Object doTransactionMethodCall(Method method, Object[] args, Object t, ConnectionManager connectionManager)
             throws Throwable {
         try {
-            transactionalManager.startTransaction();
+            connectionManager.startTransaction();
             Object result = method.invoke(t, args);
-            transactionalManager.commit();
-            transactionalManager.close();
+            connectionManager.commit();
+            connectionManager.close();
             return result;
-        } catch (InvocationTargetException e) {
-            transactionalManager.rollBack();
-            transactionalManager.close();
-            throw e.getCause().getClass().getConstructor().newInstance();
+        } catch (Throwable e) {
+            connectionManager.rollBack();
+            connectionManager.close();
+            throw e;
         }
     }
 }

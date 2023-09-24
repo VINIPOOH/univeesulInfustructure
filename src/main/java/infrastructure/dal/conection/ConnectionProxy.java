@@ -18,7 +18,7 @@ public interface ConnectionProxy extends AutoCloseable {
 
     void setAutoCommit(boolean isAutoCommit) throws SQLException;
 
-    Connection getSubject();
+    Connection getConnection();
 
     void rollBack() throws SQLException;
 
