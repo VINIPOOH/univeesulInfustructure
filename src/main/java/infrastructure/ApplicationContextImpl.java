@@ -125,14 +125,29 @@ public class ApplicationContextImpl implements ApplicationContext {
     public void init() {
         objectsCash.put(ApplicationContext.class, this);
         log.debug("");
-
-        initSingletonAnnotatedObjects();
-        initNetworkDto();
-        initHttpControllers();
-        initRestControllers();
-        initTcpEndpoints();
+        initSingletonAnnotatedObjects(true);
+        initNetworkDto(true);
+        initHttpControllers(true);
+        initRestControllers(true);
+        initTcpEndpoints(true);
+        if (Boolean.parseBoolean(getPropertyValue("infrastructure.initialize.components.in.parallel"))){
+            Thread thread = new Thread(()->initSingletonAnnotatedObjects(false));
+            thread.setPriority(Integer.parseInt(getPropertyValue("infrastructure.initialize.components.in.parallel.priority")));
+            thread.start();
+            thread = new Thread(()->initNetworkDto(false));
+            thread.setPriority(Integer.parseInt(getPropertyValue("infrastructure.initialize.components.in.parallel.priority")));
+            thread.start();
+            thread = new Thread(()->initHttpControllers(false));
+            thread.setPriority(Integer.parseInt(getPropertyValue("infrastructure.initialize.components.in.parallel.priority")));
+            thread.start();
+            thread = new Thread(()->initRestControllers(false));
+            thread.setPriority(Integer.parseInt(getPropertyValue("infrastructure.initialize.components.in.parallel.priority")));
+            thread.start();
+            thread = new Thread(()->initTcpEndpoints(false));
+            thread.setPriority(Integer.parseInt(getPropertyValue("infrastructure.initialize.components.in.parallel.priority")));
+            thread.start();
+        }
         startDemonThreads();
-
     }
 
     private void startDemonThreads() {
@@ -145,8 +160,8 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
 
-    private void initTcpEndpoints() {
-        if (!Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.tcp.controllers"))){
+    private void initTcpEndpoints(boolean shouldCheckLazyLoad) {
+        if (shouldCheckLazyLoad && !Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.tcp.controllers"))){
             return;
         }
         for (Class<?> clazz : getConfig().getSubTypesOf(AbstractTcpController.class)) {
@@ -154,8 +169,8 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
 
-    private void initRestControllers() {
-        if (!Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.rest.controllers"))){
+    private void initRestControllers(boolean shouldCheckLazyLoad) {
+        if (shouldCheckLazyLoad && !Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.rest.controllers"))){
             return;
         }
         for (Class<?> clazz : getConfig().getTypesAnnotatedWith(RestEndpoint.class)) {
@@ -171,8 +186,8 @@ public class ApplicationContextImpl implements ApplicationContext {
         }
     }
 
-    private void initHttpControllers() {
-        if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.http.controllers"))) {
+    private void initHttpControllers(boolean shouldCheckLazyLoad) {
+        if (shouldCheckLazyLoad && Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.http.controllers"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(HttpEndpoint.class)) {
                 HttpEndpoint annotation = clazz.getAnnotation(HttpEndpoint.class);
                 Arrays.stream(annotation.value()).forEach(endpointUrl -> controllerMap.put(endpointUrl, clazz));
@@ -180,8 +195,8 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
     }
-    private void initNetworkDto() {
-        if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.network.dto"))) {
+    private void initNetworkDto(boolean shouldCheckLazyLoad) {
+        if (shouldCheckLazyLoad && Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.network.dto"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(NetworkDto.class)) {
                 NetworkDto annotation = clazz.getAnnotation(NetworkDto.class);
                 messageTypeToMessageClass.put(annotation.massageCode(), clazz);
@@ -190,8 +205,8 @@ public class ApplicationContextImpl implements ApplicationContext {
             }
         }
     }
-    private void initSingletonAnnotatedObjects() {
-        if (Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.singleton"))) {
+    private void initSingletonAnnotatedObjects(boolean shouldCheckLazyLoad) {
+        if (shouldCheckLazyLoad && Boolean.parseBoolean(getPropertyValue("infrastructure.include.in.start.singleton"))) {
             for (Class<?> clazz : getConfig().getTypesAnnotatedWith(Singleton.class)) {
                 Singleton annotation = clazz.getAnnotation(Singleton.class);
                 if (!annotation.isLazy()) {
