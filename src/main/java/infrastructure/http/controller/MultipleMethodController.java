@@ -12,12 +12,20 @@ import javax.servlet.http.HttpServletRequest;
  */
 public interface MultipleMethodController {
 
-    String doGet(HttpServletRequest request);
+    default String doGet(HttpServletRequest request){
+        return null;
+    }
 
-    String doPost(HttpServletRequest request);
+    default String doPost(HttpServletRequest request){
+        return null;
+    }
 
-    String doPut(HttpServletRequest request);
+    default String doPut(HttpServletRequest request){
+        return null;
+    }
 
-    String doDelete(HttpServletRequest request);
+    default String doDelete(HttpServletRequest request){
+        return null;
+    }
 
 }

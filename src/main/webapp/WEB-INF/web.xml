@@ -3,11 +3,13 @@
   <servlet>
     <servlet-name>PureHttpDispatcherServlet</servlet-name>
     <servlet-class>infrastructure.http.PureHttpFrontController</servlet-class>
+    <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet>
     <servlet-name>RestDispatcherServlet</servlet-name>
     <servlet-class>infrastructure.rest.RestFrontController</servlet-class>
+    <load-on-startup>1</load-on-startup>
   </servlet>
 
   <servlet-mapping>
@@ -29,6 +31,40 @@
     <url-pattern>/rest/*</url-pattern>
     <url-pattern>/http/*</url-pattern>
   </filter-mapping>
+
+  <filter>
+    <filter-name>AuthorisationFilter</filter-name>
+    <filter-class>web.filter.AuthorisationFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>AuthorisationFilter</filter-name>
+    <url-pattern>/rest/*</url-pattern>
+    <url-pattern>/http/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>EncodingFilter</filter-name>
+    <filter-class>web.filter.EncodingFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>EncodingFilter</filter-name>
+    <url-pattern>/rest/*</url-pattern>
+    <url-pattern>/http/*</url-pattern>
+  </filter-mapping>
+
+  <filter>
+    <filter-name>LocaleFilter</filter-name>
+    <filter-class>web.filter.LocaleFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>LocaleFilter</filter-name>
+    <url-pattern>/rest/*</url-pattern>
+    <url-pattern>/http/*</url-pattern>
+  </filter-mapping>
+
+  <listener>
+    <listener-class>web.listener.SessionListener</listener-class>
+  </listener>
 
 
 </web-app>
