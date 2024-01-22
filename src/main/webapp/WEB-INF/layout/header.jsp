@@ -15,7 +15,7 @@
         </nav>
         <div class="col-md-4">
         <div><a class="btn" href="?lang=en" ><fmt:message key="button.en.text"/></a>
-<%--        <a class="btn" href="?lang=ru"><fmt:message key="button.ru.text"/></a>--%>
+        <a class="btn" href="?lang=ru"><fmt:message key="button.ru.text"/></a>
         </div>
         <c:if test="${sessionScope.user != null}">
             <div class="row">
